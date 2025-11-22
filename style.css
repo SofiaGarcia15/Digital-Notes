@@ -1,0 +1,128 @@
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #fff;
+}
+
+h1, h2, h3 {
+    margin: 0;
+}
+
+/* HEADER */
+.header {
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    background: linear-gradient(to right, #fad0d0, #f9d3e4, #f8eac9);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo {
+    font-size: 48px;
+    font-family: serif;
+    color: white;
+}
+
+/* NAVBAR */
+.navbar a {
+    margin: 0 12px;
+    font-size: 18px;
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.search-container {
+    background: white;
+    padding: 6px 14px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.search-container input {
+    border: none;
+    outline: none;
+    font-size: 16px;
+}
+
+.search-icon {
+    margin-left: 6px;
+}
+
+/* ÍCONO DEL MENÚ */
+.menu-icon span {
+    width: 35px;
+    height: 3px;
+    background: white;
+    display: block;
+    margin: 5px;
+    border-radius: 3px;
+}
+
+/* SECCIONES */
+.contenedor {
+    width: 90%;
+    margin: auto;
+    margin-top: 40px;
+}
+
+h2 {
+    font-size: 32px;
+    margin-bottom: 20px;
+}
+
+/* NOTAS */
+.grid-notas {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+}
+
+.nota {
+    padding: 25px;
+    border-radius: 18px;
+    font-size: 18px;
+    min-height: 150px;
+}
+
+.btn-agregar {
+    margin-top: 25px;
+    padding: 12px 25px;
+    font-size: 20px;
+    background: #f6b3c0;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+/* CUADERNOS */
+.cuadernos-row {
+    display: flex;
+    gap: 25px;
+    flex-wrap: wrap;
+}
+
+.cuaderno {
+    text-align: center;
+}
+
+.cuaderno img {
+    width: 170px;
+    height: auto;
+    border-radius: 10px;
+}
+
+.add-cover {
+    width: 170px;
+    height: 230px;
+    background: #e6e2e2;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 60px;
+}
