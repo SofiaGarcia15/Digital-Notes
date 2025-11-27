@@ -1,14 +1,3 @@
-<!-- Digital Notes — versión corregida
-Incluye:
-- Exportar/Importar funcionando
-- Eliminar nota y cuaderno funcionando
-- Buscador funcional (busca título y contenido, case-insensitive)
-- Insertar imágenes dentro de notas (subida desde dispositivo)
-- HSL picker + paleta
-- Drag & drop para mover notas
-
-Abre este archivo en tu navegador para probar.
--->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -16,10 +5,32 @@ Abre este archivo en tu navegador para probar.
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Digital Notes — SPA</title>
   <style>
-    :root{ --pink:#ffb6cc; --bg1:#ffdce5; --bg2:#ffe9c7; --accent:#c36b85; }
+    :root{
+      --pink:#ffb6cc; 
+      --bg1:#ffdce5; 
+      --bg2:#ffe9c7; 
+      --accent:#c36b85; 
+      --text:#222;
+    }
+    [data-theme="dark"]{
+      --bg1:#1a1a1a;
+      --bg2:#222;
+      --text:#eee;
+      --pink:#8b5b67;
+      --accent:#c36b85;
+    }
     *{box-sizing:border-box}
-    body{margin:0;font-family:Inter, system-ui, Arial, sans-serif;background:linear-gradient(135deg,var(--bg1),var(--bg2));min-height:100vh;color:#222}
-    header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));backdrop-filter:blur(6px)}
+    body{
+      margin:0;font-family:Inter, system-ui, Arial, sans-serif;
+      background:linear-gradient(135deg,var(--bg1),var(--bg2));
+      min-height:100vh;color:var(--text);
+    }
+    header{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:16px 20px;
+      background:linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+      backdrop-filter:blur(6px);
+    }
     .logo-area{display:flex;align-items:center;gap:12px}
     .logo-img{width:44px;height:44px;object-fit:contain;border-radius:10px}
     .logo-text{font-family:Georgia, serif;font-size:24px;color:#fff}
@@ -80,6 +91,7 @@ Abre este archivo en tu navegador para probar.
       <button class="btn" id="openQuickAdd">+ Agregar Nota</button>
       <button class="btn" id="exportBtn">Exportar</button>
       <label class="btn" id="importLabel">Importar<input type="file" id="importFile" class="file-input" accept="application/json"></label>
+      <button class="btn" id="darkModeBtn">🌙</button>
     </div>
   </header>
 
@@ -105,6 +117,7 @@ Abre este archivo en tu navegador para probar.
     </section>
   </main>
 
+  <!-- Overlay para cuadernos -->
   <div class="overlay" id="overlayNotebook">
     <div class="modal">
       <h3 id="nbModalTitle">Nuevo cuaderno</h3>
@@ -117,6 +130,7 @@ Abre este archivo en tu navegador para probar.
     </div>
   </div>
 
+  <!-- Overlay para editor de notas -->
   <div class="overlay" id="overlayEditor">
     <div class="modal" style="max-width:940px">
       <input id="noteTitle" class="title-input" placeholder="Título (opcional)" />
@@ -173,22 +187,38 @@ Abre este archivo en tu navegador para probar.
   </template>
 
   <script>
-    // STORAGE
-    const STORAGE_KEY = 'digitalNotesData_v4';
-    let state = { notebooks: [], notes: [] };
+    // --- SCRIPT COMPLETO ---
+    const STORAGE_KEY = 'digitalNotesData_v5';
+    let state = { notebooks: [], notes: [], darkMode: false };
     const uid = ()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
     const qs = s => document.querySelector(s);
     const qsa = s => document.querySelectorAll(s);
 
+    // --- STORAGE ---
     function loadState(){
       const raw = localStorage.getItem(STORAGE_KEY);
-      if(raw){ try { state = JSON.parse(raw); } catch(e){ state = {notebooks:[],notes:[]} } }
+      if(raw){ try { state = JSON.parse(raw); } catch(e){ state = {notebooks:[],notes:[], darkMode:false} } }
       if(!state.notebooks || state.notebooks.length===0){ state.notebooks = [{id:uid(),name:'General',cover:null}]; saveState(); }
       if(!state.notes) state.notes = [];
+      if(state.darkMode) document.body.setAttribute('data-theme','dark');
     }
     function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 
-    // RENDER
+    // --- MODO OSCURO ---
+    function toggleDarkMode(){
+      state.darkMode = !state.darkMode;
+      if(state.darkMode) document.body.setAttribute('data-theme','dark');
+      else document.body.removeAttribute('data-theme');
+      saveState();
+    }
+    qs('#darkModeBtn').onclick = toggleDarkMode;
+
+    // --- HELPER ---
+    const truncate = (str,len)=>{ if(!str) return ''; return str.length>len? str.slice(0,len)+'...':str; };
+    const stripHtml = html=>{ const div=document.createElement('div'); div.innerHTML=html; return div.textContent||div.innerText||''; };
+    const fileToDataUrl = file=>new Promise(res=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.readAsDataURL(file); });
+
+    // --- RENDER NOTEBOOKS ---
     function renderNotebooks(){
       const container = qs('#notebooksList'); container.innerHTML='';
       const addDiv = document.createElement('div'); addDiv.className='notebook'; addDiv.innerHTML = `<div class='add-cover' id='addNotebookBtn'>+</div><p>Agregar portada</p>`; container.appendChild(addDiv);
@@ -206,7 +236,7 @@ Abre este archivo en tu navegador para probar.
         el.appendChild(img); el.appendChild(dots); el.appendChild(menu);
         const p = document.createElement('p'); p.textContent = nb.name; el.appendChild(p);
 
-        // dragover/drop for notes
+        // dragover/drop
         el.addEventListener('dragover', (e)=>{ e.preventDefault(); el.classList.add('drop-target'); });
         el.addEventListener('dragleave', ()=> el.classList.remove('drop-target'));
         el.addEventListener('drop', (e)=>{
@@ -215,175 +245,146 @@ Abre este archivo en tu navegador para probar.
           if(noteId){ moveNoteToNotebook(noteId, nb.id); }
         });
 
-        // events
-        dots.addEventListener('click', (e)=>{ e.stopPropagation(); closeAllMenus(); menu.style.display = menu.style.display==='block' ? 'none' : 'block'; });
-        editBtn.addEventListener('click', (e)=>{ e.stopPropagation(); openNotebookModal(nb); menu.style.display='none'; });
-        renameBtn.addEventListener('click', (e)=>{ e.stopPropagation(); openNotebookModal(nb, {renameOnly:true}); menu.style.display='none'; });
-        delBtn.addEventListener('click', (e)=>{ e.stopPropagation(); if(confirm('¿Eliminar cuaderno y sus notas?')){ deleteNotebook(nb.id); } menu.style.display='none'; });
-
+        dots.addEventListener('click', e=>{ e.stopPropagation(); closeAllMenus(); menu.style.display = menu.style.display==='block' ? 'none' : 'block'; });
+        editBtn.addEventListener('click', e=>{ e.stopPropagation(); openNotebookModal(nb); menu.style.display='none'; });
+        renameBtn.addEventListener('click', e=>{ e.stopPropagation(); openNotebookModal(nb, {renameOnly:true}); menu.style.display='none'; });
+        delBtn.addEventListener('click', e=>{ e.stopPropagation(); if(confirm('¿Eliminar cuaderno y sus notas?')) deleteNotebook(nb.id); menu.style.display='none'; });
         img.addEventListener('click', ()=>{ qs('#filterNotebook').value = nb.id; renderNotes(); showView('notes'); });
 
         container.appendChild(el);
       });
-
       qs('#addNotebookBtn')?.addEventListener('click', ()=> openNotebookModal());
-      populateNotebookSelects();
+      populateNotebookFilters();
     }
+    function closeAllMenus(){ qsa('.menu').forEach(m=>m.style.display='none'); }
 
-    function moveNoteToNotebook(noteId, notebookId){
-      const n = state.notes.find(x=>x.id===noteId); if(!n) return; n.notebookId = notebookId; n.updated = Date.now(); saveState(); renderNotes();
-    }
-
-    function closeAllMenus(){ qsa('.notebook .menu').forEach(m=> m.style.display='none'); }
-
+    // --- RENDER NOTES ---
     function renderNotes(){
       const grid = qs('#notesGrid'); grid.innerHTML='';
-      const search = (qs('#searchInput').value||'').toLowerCase().trim();
-      const filter = qs('#filterNotebook').value;
-      let notes = (state.notes||[]).slice().sort((a,b)=>b.updated - a.updated);
-      if(filter && filter !== 'all') notes = notes.filter(n => n.notebookId === filter);
-      if(search){ notes = notes.filter(n => ((n.title||'') + ' ' + (stripHtml(n.content)||'')).toLowerCase().includes(search)); }
-      if(notes.length===0){ grid.innerHTML = '<p style="grid-column:1/-1;color:#444">No hay notas aún</p>'; return; }
+      const filterId = qs('#filterNotebook').value;
+      const searchVal = qs('#searchInput').value.toLowerCase();
+      const notesToRender = state.notes.filter(n=>{
+        const matchNotebook = filterId==='all'||n.notebook===filterId;
+        const matchSearch = !searchVal || (stripHtml(n.content).toLowerCase().includes(searchVal) || (n.title||'').toLowerCase().includes(searchVal));
+        return matchNotebook && matchSearch;
+      }).sort((a,b)=>b.updated - a.updated);
 
-      notes.forEach(n=>{
-        const t = qs('#noteCardTemplate').content.cloneNode(true);
-        const card = t.querySelector('.note-card');
-        card.dataset.id = n.id;
-        t.querySelector('.note-title').innerHTML = n.title || '(Sin título)';
-        t.querySelector('.note-body').innerHTML = truncate(stripHtml(n.content),120);
-        t.querySelector('.note-meta').textContent = new Date(n.updated).toLocaleString();
-        if(n.bgColor) card.style.background = n.bgColor;
-        if(n.textColor) card.style.color = n.textColor;
-
-        // drag start
-        card.addEventListener('dragstart', (e)=>{ e.dataTransfer.setData('text/note-id', n.id); });
-
-        card.addEventListener('click', ()=> openEditor(n.id));
-        grid.appendChild(t);
+      notesToRender.forEach(n=>{
+        const card = document.createElement('div'); card.className='note-card'; card.draggable=true;
+        card.dataset.id=n.id;
+        const title = document.createElement('div'); title.className='note-title'; title.textContent=truncate(n.title,35);
+        const body = document.createElement('div'); body.className='note-body'; body.innerHTML = n.content;
+        const meta = document.createElement('div'); meta.className='note-meta'; meta.textContent = new Date(n.updated).toLocaleString();
+        card.appendChild(title); card.appendChild(body); card.appendChild(meta);
+        if(n.bgColor) card.style.background=n.bgColor;
+        if(n.textColor) card.style.color=n.textColor;
+        card.addEventListener('click', ()=>openEditor(n));
+        card.addEventListener('dragstart', e=>{ e.dataTransfer.setData('text/note-id', n.id); });
+        grid.appendChild(card);
       });
     }
 
-    function populateNotebookSelects(){
-      const filter = qs('#filterNotebook'); const editorSelect = qs('#editorNotebook');
-      filter.innerHTML = '<option value="all">Todas</option>';
-      editorSelect.innerHTML = '';
-      (state.notebooks||[]).forEach(nb=>{ filter.innerHTML += `<option value="${nb.id}">${nb.name}</option>`; editorSelect.innerHTML += `<option value="${nb.id}">${nb.name}</option>`; });
-    }
+    // --- EVENTOS ---
+    qs('#filterNotebook').addEventListener('change', renderNotes);
+    qs('#searchInput').addEventListener('input', renderNotes);
+    qs('#closeEditor').addEventListener('click', ()=>qs('#overlayEditor').style.display='none');
+    document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ qs('#overlayEditor').style.display='none'; qs('#overlayNotebook').style.display='none'; } });
 
-    // NOTEBOOK CRUD
-    function openNotebookModal(nb=null, opts={}){
-      qs('#overlayNotebook').style.display='flex';
-      qs('#nbModalTitle').textContent = nb ? (opts.renameOnly? 'Renombrar cuaderno':'Editar cuaderno') : 'Nuevo cuaderno';
-      qs('#nbName').value = nb ? nb.name : '';
-      qs('#nbCoverFile').value = '';
-      qs('#nbSave').onclick = async ()=>{
-        const name = qs('#nbName').value.trim() || 'Sin nombre';
-        if(nb){
-          if(opts.renameOnly){ nb.name = name; saveState(); renderNotebooks(); qs('#overlayNotebook').style.display='none'; return; }
-          nb.name = name;
-          const f = qs('#nbCoverFile').files[0]; if(f){ nb.cover = await fileToDataUrl(f); }
-        } else {
-          const newNb = { id: uid(), name, cover: null };
-          const f = qs('#nbCoverFile').files[0]; if(f) newNb.cover = await fileToDataUrl(f);
-          state.notebooks.push(newNb);
-        }
-        saveState(); renderNotebooks(); qs('#overlayNotebook').style.display='none';
-      };
-      qs('#nbCancel').onclick = ()=> qs('#overlayNotebook').style.display='none';
-    }
-
-    function deleteNotebook(id){ state.notebooks = state.notebooks.filter(n=>n.id!==id); state.notes = state.notes.filter(nt=>nt.notebookId!==id); saveState(); renderNotebooks(); renderNotes(); }
-
-    // NOTE CRUD
-    function openEditor(noteId=null){
+    // --- NOTAS CRUD ---
+    let editingNote=null;
+    function openEditor(note=null){
+      editingNote = note;
       qs('#overlayEditor').style.display='flex';
-      const editor = qs('#editor'); const title = qs('#noteTitle'); const deleteBtn = qs('#deleteNoteBtn');
-      hideColorPanel();
-      if(noteId){
-        const note = state.notes.find(n=>n.id===noteId);
-        title.value = note.title||''; editor.innerHTML = note.content||''; qs('#editorNotebook').value = note.notebookId || (state.notebooks[0] && state.notebooks[0].id);
-        editor.style.background = note.bgColor || 'transparent'; editor.style.color = note.textColor || 'inherit';
-        deleteBtn.style.display = 'inline-block';
-        deleteBtn.onclick = ()=>{ if(confirm('Eliminar nota?')){ state.notes = state.notes.filter(x=>x.id!==noteId); saveState(); qs('#overlayEditor').style.display='none'; renderNotes(); } };
-      } else {
-        title.value = ''; editor.innerHTML = '<p><br></p>'; editor.style.background = 'transparent'; editor.style.color = 'inherit'; qs('#editorNotebook').selectedIndex = 0; deleteBtn.style.display='none';
-      }
-      qs('#saveNote').onclick = ()=> saveNote(noteId);
-      qs('#closeEditor').onclick = ()=> { qs('#overlayEditor').style.display='none'; renderNotes(); };
-
-      // toolbar
-      qsa('.toolbar button').forEach(b=>{ if(!b.dataset.cmd) return; b.onclick = ()=> document.execCommand(b.dataset.cmd, false, null); });
-
-      qs('#openColorPanel').onclick = ()=> toggleColorPanel();
-
-      // insert image button
-      qs('#insertImageBtn').onclick = ()=> qs('#noteImageFile').click();
-      qs('#noteImageFile').onchange = async (e)=>{
-        const f = e.target.files[0]; if(!f) return; const data = await fileToDataUrl(f); insertImageAtCursor(data); qs('#noteImageFile').value='';
-      };
-
-      // autosave
-      let typingTimer; editor.oninput = ()=>{ clearTimeout(typingTimer); typingTimer = setTimeout(()=>{ if(noteId){ const nt = state.notes.find(n=>n.id===noteId); if(nt){ nt.content = editor.innerHTML; nt.title = title.value; nt.updated = Date.now(); nt.bgColor = editor.style.background || null; nt.textColor = editor.style.color || null; saveState(); renderNotes(); } } },700); };
+      qs('#noteTitle').value = note?.title||'';
+      qs('#editor').innerHTML = note?.content||'';
+      qs('#deleteNoteBtn').style.display = note ? 'inline-block':'none';
+      populateEditorNotebook();
+      setupAutosave();
     }
-
-    async function saveNote(noteId=null){
-      const editor = qs('#editor'); const title = qs('#noteTitle').value.trim(); const notebookId = qs('#editorNotebook').value || (state.notebooks[0] && state.notebooks[0].id);
-      const bg = editor.style.background || null; const textC = editor.style.color || null;
-      if(noteId){ const note = state.notes.find(n=>n.id===noteId); if(note){ note.title = title; note.content = editor.innerHTML; note.updated = Date.now(); note.notebookId = notebookId; note.bgColor = bg; note.textColor = textC; } }
-      else { const newNote = { id: uid(), notebookId, title, content: editor.innerHTML, created: Date.now(), updated: Date.now(), bgColor: bg, textColor: textC }; state.notes.push(newNote); }
-      saveState(); qs('#overlayEditor').style.display='none'; renderNotes();
-    }
-
-    // helpers: insert image at caret
-    function insertImageAtCursor(src){ const sel = window.getSelection(); if(!sel || !sel.rangeCount) { qs('#editor').innerHTML += `<img src="${src}" class="note-img"/>`; return; } const range = sel.getRangeAt(0); const img = document.createElement('img'); img.src = src; img.className = 'note-img'; range.insertNode(img); range.setStartAfter(img); range.setEndAfter(img); sel.removeAllRanges(); sel.addRange(range); }
-
-    // Quick add
-    qs('#openQuickAdd').addEventListener('click', ()=> openEditor(null));
-    qs('#fab').addEventListener('click', ()=> openEditor(null));
-
-    function fileToDataUrl(file){ return new Promise(res=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.readAsDataURL(file); }); }
-    function truncate(str,len){ if(!str) return ''; return str.length>len? str.slice(0,len)+'...':str; }
-    function stripHtml(html){ const div=document.createElement('div'); div.innerHTML=html; return div.textContent || div.innerText || ''; }
-
-    // search & filter
-    qs('#searchInput').addEventListener('input', ()=> renderNotes());
-    qs('#filterNotebook').addEventListener('change', ()=> renderNotes());
-    qsa('[data-view]').forEach(a=> a.addEventListener('click', (e)=>{ e.preventDefault(); showView(a.dataset.view); }));
-    function showView(v){ qs('#view-notes').style.display = v==='notes' ? 'block':'none'; qs('#view-cuadernos').style.display = v==='cuadernos' ? 'block':'none'; }
-
-    // Color panel
-    const hRange = qs('#hRange'), sRange = qs('#sRange'), lRange = qs('#lRange'), aRange = qs('#aRange'), preview = qs('#colorPreview'), textColorPicker = qs('#textColorPicker');
-    const quickPalette = ['#fff0f6','#ffd6e8','#ffd0e6','#ffecf2','#fff8e8','#fff1f5','#f7d6e0','#fceef3'];
-    function toggleColorPanel(){ qs('#colorPanel').style.display = qs('#colorPanel').style.display==='none' ? 'block' : 'none'; updatePreview(); }
-    function hideColorPanel(){ qs('#colorPanel').style.display='none'; }
-    function hslToCss(h,s,l,a){ return `hsla(${h},${s}%,${l}%,${a})`; }
-    function updatePreview(){ preview.style.background = hslToCss(hRange.value, sRange.value, lRange.value, aRange.value); }
-    [hRange,sRange,lRange,aRange].forEach(el=> el.addEventListener('input', updatePreview));
-    qs('#applyBgColor').addEventListener('click', ()=>{ qs('#editor').style.background = hslToCss(hRange.value, sRange.value, lRange.value, aRange.value); hideColorPanel(); });
-    qs('#applyTextColor').addEventListener('click', ()=>{ qs('#editor').style.color = textColorPicker.value; hideColorPanel(); });
-
-    function renderPalette(){ const p = qs('#quickPalette'); p.innerHTML=''; quickPalette.forEach(c=>{ const b=document.createElement('button'); b.style.background=c; b.title=c; b.addEventListener('click', ()=>{ qs('#editor').style.background = c; }); p.appendChild(b); }); }
-
-    // Export / Import
-    qs('#exportBtn').addEventListener('click', ()=>{
-      try{
-        const data = JSON.stringify(state);
-        const blob = new Blob([data],{type:'application/json'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'digitalnotes_backup.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-      }catch(err){ alert('Error al exportar: '+err.message); }
+    qs('#saveNote').addEventListener('click', ()=>{ saveCurrentNote(); });
+    qs('#deleteNoteBtn').addEventListener('click', ()=>{
+      if(editingNote && confirm('¿Eliminar nota?')){ state.notes = state.notes.filter(n=>n.id!==editingNote.id); saveState(); renderNotes(); qs('#overlayEditor').style.display='none'; }
     });
-    qs('#importFile').addEventListener('change', (e)=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload = ()=>{ try{ const imported = JSON.parse(r.result); if(imported.notebooks && imported.notes){ state = imported; saveState(); renderNotebooks(); renderNotes(); renderPalette(); alert('Importado con éxito'); } else alert('Archivo inválido'); } catch(err){ alert('Error al importar'); } }; r.readAsText(f); });
 
-    // click outside to close
-    document.addEventListener('click', (e)=>{ if(!e.target.closest('.notebook')) closeAllMenus(); });
+    function saveCurrentNote(){
+      const title = qs('#noteTitle').value;
+      const content = qs('#editor').innerHTML;
+      const notebook = qs('#editorNotebook').value;
+      if(editingNote){ editingNote.title=title; editingNote.content=content; editingNote.notebook=notebook; editingNote.updated=Date.now(); }
+      else{ state.notes.push({id:uid(),title,content,notebook,updated:Date.now()}); }
+      saveState(); renderNotes(); editingNote=null; qs('#overlayEditor').style.display='none';
+    }
 
-    // init
-    loadState(); renderNotebooks(); renderNotes(); renderPalette();
+    function setupAutosave(){
+      const editor = qs('#editor'); const titleEl = qs('#noteTitle');
+      let timer; editor.oninput = titleEl.oninput = ()=>{
+        clearTimeout(timer); timer=setTimeout(saveCurrentNote,500);
+      };
+    }
 
-    // expose for debugging
-    window.DigitalNotes = { state, saveState, loadState };
+    // --- CUADERNOS CRUD ---
+    let editingNotebook=null; let renameOnly=false;
+    function openNotebookModal(nb=null,opt={}){
+      editingNotebook=nb||null; renameOnly=opt.renameOnly||false;
+      qs('#overlayNotebook').style.display='flex';
+      qs('#nbModalTitle').textContent = nb ? (renameOnly?'Renombrar cuaderno':'Editar cuaderno'):'Nuevo cuaderno';
+      qs('#nbName').value = nb?.name||'';
+    }
+    qs('#nbCancel').addEventListener('click', ()=>qs('#overlayNotebook').style.display='none');
+    qs('#nbSave').addEventListener('click', async ()=>{
+      const name = qs('#nbName').value.trim(); if(!name)return alert('Nombre requerido');
+      if(editingNotebook){
+        editingNotebook.name=name;
+        if(!renameOnly && qs('#nbCoverFile').files[0]) editingNotebook.cover = await fileToDataUrl(qs('#nbCoverFile').files[0]);
+      } else {
+        const cover = qs('#nbCoverFile').files[0]? await fileToDataUrl(qs('#nbCoverFile').files[0]):null;
+        state.notebooks.push({id:uid(),name,cover});
+      }
+      saveState(); renderNotebooks(); qs('#overlayNotebook').style.display='none';
+    });
+    function deleteNotebook(id){
+      state.notebooks = state.notebooks.filter(nb=>nb.id!==id);
+      state.notes = state.notes.filter(n=>n.notebook!==id);
+      saveState(); renderNotebooks(); renderNotes();
+    }
+
+    function populateNotebookFilters(){
+      const sel = qs('#filterNotebook'); const editorSel=qs('#editorNotebook');
+      sel.innerHTML='<option value="all">Todas</option>';
+      editorSel.innerHTML='';
+      state.notebooks.forEach(nb=>{ const o1=document.createElement('option'); o1.value=nb.id; o1.textContent=nb.name; sel.appendChild(o1); const o2=o1.cloneNode(true); editorSel.appendChild(o2); });
+    }
+    function populateEditorNotebook(){ populateNotebookFilters(); if(editingNote) qs('#editorNotebook').value = editingNote.notebook; }
+
+    function moveNoteToNotebook(noteId, nbId){
+      const note = state.notes.find(n=>n.id===noteId); if(note){ note.notebook=nbId; saveState(); renderNotes(); }
+    }
+
+    // --- VIEWS ---
+    function showView(view){ qs('#view-notes').style.display=view==='notes'?'block':'none'; qs('#view-cuadernos').style.display=view==='cuadernos'?'block':'none'; }
+    qsa('.nav-links a').forEach(a=>a.addEventListener('click', e=>{ e.preventDefault(); showView(a.dataset.view); }));
+
+    // --- FAB ---
+    qs('#fab').addEventListener('click', ()=>openEditor());
+
+    // --- EXPORT / IMPORT ---
+    qs('#exportBtn').addEventListener('click', ()=>{
+      const dataStr = JSON.stringify(state,null,2);
+      const blob = new Blob([dataStr], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download='digital_notes.json'; a.click();
+      URL.revokeObjectURL(url);
+    });
+    qs('#importFile').addEventListener('change', e=>{
+      const f = e.target.files[0]; if(!f)return;
+      const reader = new FileReader();
+      reader.onload = function(ev){ try{ state = JSON.parse(ev.target.result); saveState(); renderNotebooks(); renderNotes(); }catch(err){ alert('Archivo inválido'); } };
+      reader.readAsText(f);
+    });
+
+    // --- INIT ---
+    loadState(); renderNotebooks(); renderNotes(); showView('notes');
+
   </script>
 </body>
 </html>
