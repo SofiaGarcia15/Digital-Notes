@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Digital Notes — SPA</title>
+  <title>Digital Notes 2025</title>
   <style>
     :root{
       --pink:#ffb6cc; 
@@ -14,66 +14,365 @@
     }
     [data-theme="dark"]{
       --bg1:#1a1a1a;
-      --bg2:#222;
-      --text:#eee;
+      --bg2:#302b2b;
+      --text:#ffffff;
       --pink:#8b5b67;
       --accent:#c36b85;
     }
+
     *{box-sizing:border-box}
+
     body{
-      margin:0;font-family:Inter, system-ui, Arial, sans-serif;
+      margin:0;
+      font-family:Inter, system-ui, Arial, sans-serif;
       background:linear-gradient(135deg,var(--bg1),var(--bg2));
-      min-height:100vh;color:var(--text);
+      min-height:100vh;
+      color:var(--text);
     }
+
     header{
-      display:flex;align-items:center;justify-content:space-between;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
       padding:16px 20px;
       background:linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
       backdrop-filter:blur(6px);
+      flex-wrap:wrap;
     }
-    .logo-area{display:flex;align-items:center;gap:12px}
-    .logo-img{width:44px;height:44px;object-fit:contain;border-radius:10px}
-    .logo-text{font-family:Georgia, serif;font-size:24px;color:#fff}
-    .nav-right{display:flex;gap:12px;align-items:center}
-    .nav-links a{color:#6b4350;text-decoration:none;padding:8px 12px;border-radius:12px;background:linear-gradient(90deg,#ffeef6,#fff6ee);font-weight:700}
-    input.search{padding:8px 12px;border-radius:20px;border:0;min-width:140px}
+
+    .logo-area{
+      display:flex;
+      align-items:center;
+      gap:12px
+    }
+
+    .logo-img{
+      width:44px;height:44px;
+      object-fit:contain;
+      border-radius:10px
+    }
+
+    .logo-text{
+      font-family:Georgia, serif;
+      font-size:24px;
+      color:#fff
+    }
+
+    .nav-right{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .nav-links a{
+      color:#6b4350;
+      text-decoration:none;
+      padding:8px 12px;
+      border-radius:12px;
+      background:linear-gradient(90deg,#ffeef6,#fff6ee);
+      font-weight:700
+    }
+
+    input.search{
+      padding:8px 12px;
+      border-radius:20px;
+      border:0;
+      min-width:140px
+    }
+
     main{padding:18px 20px}
-    h1.section{color:#111;margin:18px 0}
-    .controls{display:flex;gap:12px;align-items:center;margin-bottom:12px}
-    .btn{background:var(--pink);border:none;padding:10px 14px;border-radius:22px;cursor:pointer;color:#5a3d4b;font-weight:700;box-shadow:0 6px 18px rgba(195,107,133,0.12);transition:transform .15s ease}
-    .btn:hover{transform:translateY(-3px)}
-    .notes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
-    .note-card{padding:14px;border-radius:14px;min-height:120px;box-shadow:0 8px 20px rgba(0,0,0,0.08);position:relative;overflow:hidden;background:#fff;color:#222}
-    .note-title{font-weight:700;margin-bottom:8px}
-    .note-body{white-space:pre-wrap;color:inherit}
-    .note-meta{font-size:12px;color:rgba(0,0,0,0.5)}
-    .notebooks{display:flex;gap:18px;flex-wrap:wrap}
-    .notebook{width:150px;text-align:center;position:relative;border-radius:12px}
-    .notebook img{width:150px;height:200px;object-fit:cover;border-radius:12px;display:block}
-    .notebook p{margin:8px 0 0;font-weight:700}
-    .notebook .dots{position:absolute; top:8px; right:8px; cursor:pointer; color:#333; font-size:22px; z-index:50}
-    .notebook .menu{display:none;position:absolute;top:36px;right:8px;background:#fff;padding:8px;border-radius:10px;box-shadow:0 12px 30px rgba(0,0,0,0.12);z-index:60}
-    .notebook .menu button{display:block;width:160px;text-align:left;padding:10px;border-radius:8px;border:none;background:linear-gradient(90deg,var(--pink),#ffd0e6);color:#5a3d4b;font-weight:700;margin-bottom:6px;cursor:pointer}
-    .add-cover{width:150px;height:200px;border-radius:12px;background:rgba(255,255,255,0.6);display:flex;align-items:center;justify-content:center;font-size:48px;color:#666}
-    .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:none;align-items:center;justify-content:center;padding:20px;z-index:100}
-    .modal{background:#fff;width:100%;max-width:960px;border-radius:12px;padding:18px;box-shadow:0 18px 40px rgba(0,0,0,0.25)}
-    .title-input{width:100%;padding:10px;border-radius:10px;border:1px solid #eee;margin-bottom:10px;font-weight:700}
-    .toolbar{display:flex;gap:8px;margin-bottom:8px;align-items:center}
-    .toolbar button{padding:10px;border-radius:10px;border:2px solid rgba(0,0,0,0.04);background:#fff;cursor:pointer;font-weight:700}
-    .editor{min-height:300px;border-radius:10px;border:1px solid #eee;padding:14px;overflow:auto;background:transparent}
+
+    h1.section{
+      color:#111;
+      margin:18px 0
+    }
+
+    .controls{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-bottom:12px
+    }
+
+    .btn{
+      background:var(--pink);
+      border:none;
+      padding:10px 14px;
+      border-radius:22px;
+      cursor:pointer;
+      color:#5a3d4b;
+      font-weight:700;
+      box-shadow:0 6px 18px rgba(195,107,133,0.12);
+      transition:transform .15s ease
+    }
+
+    .btn:hover{
+      transform:translateY(-3px)
+    }
+
+    .notes-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+      gap:18px
+    }
+
+    .note-card{
+      padding:14px;
+      border-radius:14px;
+      min-height:120px;
+      box-shadow:0 8px 20px rgba(0,0,0,0.08);
+      position:relative;
+      overflow:hidden;
+      background:#fff;
+      color:#222
+    }
+
+    .note-title{
+      font-weight:700;
+      margin-bottom:8px
+    }
+
+    .note-body{
+      white-space:pre-wrap;
+      color:inherit
+    }
+
+    .note-meta{
+      font-size:12px;
+      color:rgba(0,0,0,0.5)
+    }
+
+    .notebooks{
+      display:flex;
+      gap:18px;
+      flex-wrap:wrap
+    }
+
+    .notebook{
+      width:150px;
+      text-align:center;
+      position:relative;
+      border-radius:12px
+    }
+
+    .notebook img{
+      width:150px;
+      height:200px;
+      object-fit:cover;
+      border-radius:12px;
+      display:block
+    }
+
+    .notebook p{
+      margin:8px 0 0;
+      font-weight:700
+    }
+
+    .notebook .dots{
+      position:absolute;
+      top:8px;
+      right:8px;
+      cursor:pointer;
+      color:#333;
+      font-size:22px;
+      z-index:50
+    }
+
+    .notebook .menu{
+      display:none;
+      position:absolute;
+      top:36px;
+      right:8px;
+      background:#fff;
+      padding:8px;
+      border-radius:10px;
+      box-shadow:0 12px 30px rgba(0,0,0,0.12);
+      z-index:60
+    }
+
+    .notebook .menu button{
+      display:block;
+      width:160px;
+      text-align:left;
+      padding:10px;
+      border-radius:8px;
+      border:none;
+      background:linear-gradient(90deg,var(--pink),#ffd0e6);
+      color:#5a3d4b;
+      font-weight:700;
+      margin-bottom:6px;
+      cursor:pointer
+    }
+
+    .add-cover{
+      width:150px;
+      height:200px;
+      border-radius:12px;
+      background:rgba(255,255,255,0.6);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:48px;
+      color:#666
+    }
+
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.4);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      z-index:100
+    }
+
+    .modal{
+      background:#fff;
+      width:100%;
+      max-width:960px;
+      border-radius:12px;
+      padding:18px;
+      box-shadow:0 18px 40px rgba(0,0,0,0.25)
+    }
+
+    .title-input{
+      width:100%;
+      padding:10px;
+      border-radius:10px;
+      border:1px solid #eee;
+      margin-bottom:10px;
+      font-weight:700
+    }
+
+    .toolbar{
+      display:flex;
+      gap:8px;
+      margin-bottom:8px;
+      align-items:center
+    }
+
+    .toolbar button{
+      padding:10px;
+      border-radius:10px;
+      border:2px solid rgba(0,0,0,0.04);
+      background:#fff;
+      cursor:pointer;
+      font-weight:700
+    }
+
+    .editor{
+      min-height:300px;
+      border-radius:10px;
+      border:1px solid #eee;
+      padding:14px;
+      overflow:auto;
+      background:transparent
+    }
+
     .editor[contenteditable]{outline:none}
-    .color-panel{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-    .color-preview{width:40px;height:40px;border-radius:8px;border:1px solid #ddd}
-    .color-controls{display:flex;flex-direction:column;gap:8px}
+
+    .color-panel{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      flex-wrap:wrap
+    }
+
+    .color-preview{
+      width:40px;
+      height:40px;
+      border-radius:8px;
+      border:1px solid #ddd
+    }
+
+    .color-controls{
+      display:flex;
+      flex-direction:column;
+      gap:8px
+    }
+
     .color-controls input[type=range]{width:220px}
-    .palette{display:flex;gap:8px;flex-wrap:wrap}
-    .palette button{width:36px;height:36px;border-radius:8px;border:2px solid rgba(0,0,0,0.06);cursor:pointer}
-    @media(max-width:720px){.logo-text{font-size:20px}.notebook img{width:120px;height:160px}.add-cover{width:120px;height:160px}}
-    .icon-btn{width:62px;height:62px;border-radius:50%;background:linear-gradient(180deg,#ffd0e6,#ffb6cc);display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 10px 30px rgba(195,107,133,0.18);position:fixed;bottom:24px;right:24px;cursor:pointer;z-index:120}
-    .row{display:flex;gap:8px;align-items:center}
-    .notebook.drop-target{outline:3px dashed rgba(195,107,133,0.35)}
+
+    .palette{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap
+    }
+
+    .palette button{
+      width:36px;
+      height:36px;
+      border-radius:8px;
+      border:2px solid rgba(0,0,0,0.06);
+      cursor:pointer
+    }
+
+    .icon-btn{
+      width:62px;
+      height:62px;
+      border-radius:50%;
+      background:linear-gradient(180deg,#ffd0e6,#ffb6cc);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:30px;
+      box-shadow:0 10px 30px rgba(195,107,133,0.18);
+      position:fixed;
+      bottom:24px;
+      right:24px;
+      cursor:pointer;
+      z-index:120
+    }
+
+    .row{
+      display:flex;
+      gap:8px;
+      align-items:center
+    }
+
+    .notebook.drop-target{
+      outline:3px dashed rgba(195,107,133,0.35)
+    }
+
     .file-input{display:none}
-    .note-img{max-width:100%;border-radius:8px;margin-top:8px}
+
+    .note-img{
+      max-width:100%;
+      border-radius:8px;
+      margin-top:8px
+    }
+
+    /* RESPONSIVE FIX FULL */
+    @media(max-width:600px){
+      header{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:14px;
+        padding:12px 16px;
+      }
+      .nav-right{
+        width:100%;
+        flex-wrap:wrap;
+        gap:8px;
+      }
+      .nav-links a{
+        padding:6px 8px;
+        font-size:13px;
+      }
+      .btn{
+        padding:8px 10px;
+        font-size:13px;
+        border-radius:16px;
+      }
+      input.search{
+        min-width:100%;
+        padding:8px;
+      }
+      .logo-img{width:36px;height:36px}
+      .logo-text{font-size:18px}
+    }
   </style>
 </head>
 <body>
@@ -82,15 +381,23 @@
       <img src="logodn.index.png" alt="Logo" class="logo-img" />
       <span class="logo-text">Digital Notes</span>
     </div>
+
     <div class="nav-right">
       <nav class="nav-links">
         <a href="#" data-view="notes">Notas recientes</a>
         <a href="#" data-view="cuadernos">Mis cuadernos</a>
       </nav>
+
       <input class="search" placeholder="Buscar..." id="searchInput" />
+
       <button class="btn" id="openQuickAdd">+ Agregar Nota</button>
       <button class="btn" id="exportBtn">Exportar</button>
-      <label class="btn" id="importLabel">Importar<input type="file" id="importFile" class="file-input" accept="application/json"></label>
+
+      <label class="btn" id="importLabel">
+        Importar
+        <input type="file" id="importFile" class="file-input" accept="application/json">
+      </label>
+
       <button class="btn" id="darkModeBtn">🌙</button>
     </div>
   </header>
@@ -176,7 +483,7 @@
     </div>
   </div>
 
-  <div class="icon-btn" id="fab">+</div>
+  <div class="icon-btn" id="fab" title="Agregar nota">+</div>
 
   <template id="noteCardTemplate">
     <div class="note-card" draggable="true">
@@ -187,24 +494,32 @@
   </template>
 
   <script>
-    // --- SCRIPT COMPLETO ---
+    /* ---------------------------
+       Digital Notes 2025 - JS
+       Todo en un solo archivo
+       --------------------------- */
     const STORAGE_KEY = 'digitalNotesData_v5';
     let state = { notebooks: [], notes: [], darkMode: false };
     const uid = ()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
     const qs = s => document.querySelector(s);
     const qsa = s => document.querySelectorAll(s);
 
-    // --- STORAGE ---
+    // --- Helpers ---
+    const truncate = (str,len)=>{ if(!str) return ''; return str.length>len? str.slice(0,len)+'...':str; };
+    const stripHtml = html=>{ const div=document.createElement('div'); div.innerHTML=html; return div.textContent||div.innerText||''; };
+    const fileToDataUrl = file=> new Promise(res=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.readAsDataURL(file); });
+
+    // --- Storage ---
     function loadState(){
       const raw = localStorage.getItem(STORAGE_KEY);
-      if(raw){ try { state = JSON.parse(raw); } catch(e){ state = {notebooks:[],notes:[], darkMode:false} } }
+      if(raw){ try { state = JSON.parse(raw); } catch(e){ state = {notebooks:[],notes:[], darkMode:false}; } }
       if(!state.notebooks || state.notebooks.length===0){ state.notebooks = [{id:uid(),name:'General',cover:null}]; saveState(); }
       if(!state.notes) state.notes = [];
       if(state.darkMode) document.body.setAttribute('data-theme','dark');
     }
     function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 
-    // --- MODO OSCURO ---
+    // --- Dark mode ---
     function toggleDarkMode(){
       state.darkMode = !state.darkMode;
       if(state.darkMode) document.body.setAttribute('data-theme','dark');
@@ -213,12 +528,7 @@
     }
     qs('#darkModeBtn').onclick = toggleDarkMode;
 
-    // --- HELPER ---
-    const truncate = (str,len)=>{ if(!str) return ''; return str.length>len? str.slice(0,len)+'...':str; };
-    const stripHtml = html=>{ const div=document.createElement('div'); div.innerHTML=html; return div.textContent||div.innerText||''; };
-    const fileToDataUrl = file=>new Promise(res=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.readAsDataURL(file); });
-
-    // --- RENDER NOTEBOOKS ---
+    // --- Render Notebooks ---
     function renderNotebooks(){
       const container = qs('#notebooksList'); container.innerHTML='';
       const addDiv = document.createElement('div'); addDiv.className='notebook'; addDiv.innerHTML = `<div class='add-cover' id='addNotebookBtn'>+</div><p>Agregar portada</p>`; container.appendChild(addDiv);
@@ -226,7 +536,8 @@
       state.notebooks.forEach(nb=>{
         const el = document.createElement('div'); el.className='notebook';
         el.dataset.id = nb.id;
-        const img = document.createElement('img'); img.src = nb.cover || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400"><rect width="100%" height="100%" fill="%23f0f0f0"/></svg>';
+        const img = document.createElement('img');
+        img.src = nb.cover || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400"><rect width="100%" height="100%" fill="%23f0f0f0"/></svg>';
         const dots = document.createElement('div'); dots.className='dots'; dots.textContent='⋮';
         const menu = document.createElement('div'); menu.className='menu';
         const editBtn = document.createElement('button'); editBtn.textContent='Editar portada';
@@ -236,7 +547,7 @@
         el.appendChild(img); el.appendChild(dots); el.appendChild(menu);
         const p = document.createElement('p'); p.textContent = nb.name; el.appendChild(p);
 
-        // dragover/drop
+        // dragover/drop for notes
         el.addEventListener('dragover', (e)=>{ e.preventDefault(); el.classList.add('drop-target'); });
         el.addEventListener('dragleave', ()=> el.classList.remove('drop-target'));
         el.addEventListener('drop', (e)=>{
@@ -258,7 +569,7 @@
     }
     function closeAllMenus(){ qsa('.menu').forEach(m=>m.style.display='none'); }
 
-    // --- RENDER NOTES ---
+    // --- Render Notes ---
     function renderNotes(){
       const grid = qs('#notesGrid'); grid.innerHTML='';
       const filterId = qs('#filterNotebook').value;
@@ -284,13 +595,13 @@
       });
     }
 
-    // --- EVENTOS ---
+    // --- Events and UI wiring ---
     qs('#filterNotebook').addEventListener('change', renderNotes);
     qs('#searchInput').addEventListener('input', renderNotes);
-    qs('#closeEditor').addEventListener('click', ()=>qs('#overlayEditor').style.display='none');
-    document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ qs('#overlayEditor').style.display='none'; qs('#overlayNotebook').style.display='none'; } });
+    qs('#closeEditor').addEventListener('click', ()=>closeEditor());
+    document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeEditor(); qs('#overlayNotebook').style.display='none'; } });
 
-    // --- NOTAS CRUD ---
+    // --- Notes CRUD ---
     let editingNote=null;
     function openEditor(note=null){
       editingNote = note;
@@ -300,39 +611,44 @@
       qs('#deleteNoteBtn').style.display = note ? 'inline-block':'none';
       populateEditorNotebook();
       setupAutosave();
+      // set current colors preview
+      if(note){
+        if(note.bgColor) qs('#colorPreview').style.background = note.bgColor;
+        if(note.textColor) qs('#textColorPicker').value = note.textColor;
+      } else {
+        qs('#colorPreview').style.background = '';
+      }
     }
+    function closeEditor(){
+      qs('#overlayEditor').style.display='none';
+      editingNote=null;
+    }
+
     qs('#saveNote').addEventListener('click', ()=>{ saveCurrentNote(); });
     qs('#deleteNoteBtn').addEventListener('click', ()=>{
-      if(editingNote && confirm('¿Eliminar nota?')){ state.notes = state.notes.filter(n=>n.id!==editingNote.id); saveState(); renderNotes(); qs('#overlayEditor').style.display='none'; }
+      if(editingNote && confirm('¿Eliminar nota?')){ state.notes = state.notes.filter(n=>n.id!==editingNote.id); saveState(); renderNotes(); closeEditor(); }
     });
 
     function saveCurrentNote(){
       const title = qs('#noteTitle').value;
       const content = qs('#editor').innerHTML;
-      const notebook = qs('#editorNotebook').value;
+      const notebook = qs('#editorNotebook').value || state.notebooks[0].id;
       if(editingNote){ editingNote.title=title; editingNote.content=content; editingNote.notebook=notebook; editingNote.updated=Date.now(); }
-      else{ state.notes.push({id:uid(),title,content,notebook,updated:Date.now()}); }
-      saveState(); renderNotes(); editingNote=null; qs('#overlayEditor').style.display='none';
+      else{ state.notes.push({id:uid(),title,content,notebook,updated:Date.now(), bgColor:null, textColor:null}); }
+      saveState(); renderNotes(); editingNote=null; closeEditor();
     }
 
     function setupAutosave(){
       const editor = qs('#editor'); const titleEl = qs('#noteTitle');
-      let timer; editor.oninput = titleEl.oninput = ()=>{
-        clearTimeout(timer); timer=setTimeout(saveCurrentNote,500);
-      };
+      let timer; editor.oninput = titleEl.oninput = ()=>{ clearTimeout(timer); timer=setTimeout(saveCurrentNote,700); };
     }
 
-    // --- CUADERNOS CRUD ---
+    // --- Notebooks CRUD ---
     let editingNotebook=null; let renameOnly=false;
-    function openNotebookModal(nb=null,opt={}){
-      editingNotebook=nb||null; renameOnly=opt.renameOnly||false;
-      qs('#overlayNotebook').style.display='flex';
-      qs('#nbModalTitle').textContent = nb ? (renameOnly?'Renombrar cuaderno':'Editar cuaderno'):'Nuevo cuaderno';
-      qs('#nbName').value = nb?.name||'';
-    }
+    function openNotebookModal(nb=null,opt={}){ editingNotebook=nb||null; renameOnly=opt.renameOnly||false; qs('#overlayNotebook').style.display='flex'; qs('#nbModalTitle').textContent = nb ? (renameOnly?'Renombrar cuaderno':'Editar cuaderno'):'Nuevo cuaderno'; qs('#nbName').value = nb?.name||''; }
     qs('#nbCancel').addEventListener('click', ()=>qs('#overlayNotebook').style.display='none');
     qs('#nbSave').addEventListener('click', async ()=>{
-      const name = qs('#nbName').value.trim(); if(!name)return alert('Nombre requerido');
+      const name = qs('#nbName').value.trim(); if(!name) return alert('Nombre requerido');
       if(editingNotebook){
         editingNotebook.name=name;
         if(!renameOnly && qs('#nbCoverFile').files[0]) editingNotebook.cover = await fileToDataUrl(qs('#nbCoverFile').files[0]);
@@ -343,6 +659,7 @@
       saveState(); renderNotebooks(); qs('#overlayNotebook').style.display='none';
     });
     function deleteNotebook(id){
+      if(!confirm('Eliminar libreta y sus notas. ¿Continuar?')) return;
       state.notebooks = state.notebooks.filter(nb=>nb.id!==id);
       state.notes = state.notes.filter(n=>n.notebook!==id);
       saveState(); renderNotebooks(); renderNotes();
@@ -356,34 +673,114 @@
     }
     function populateEditorNotebook(){ populateNotebookFilters(); if(editingNote) qs('#editorNotebook').value = editingNote.notebook; }
 
-    function moveNoteToNotebook(noteId, nbId){
-      const note = state.notes.find(n=>n.id===noteId); if(note){ note.notebook=nbId; saveState(); renderNotes(); }
-    }
+    function moveNoteToNotebook(noteId, nbId){ const note = state.notes.find(n=>n.id===noteId); if(note){ note.notebook=nbId; saveState(); renderNotes(); } }
 
-    // --- VIEWS ---
+    // --- Views ---
     function showView(view){ qs('#view-notes').style.display=view==='notes'?'block':'none'; qs('#view-cuadernos').style.display=view==='cuadernos'?'block':'none'; }
     qsa('.nav-links a').forEach(a=>a.addEventListener('click', e=>{ e.preventDefault(); showView(a.dataset.view); }));
 
-    // --- FAB ---
+    // --- FAB and quick add binding ---
     qs('#fab').addEventListener('click', ()=>openEditor());
+    qs('#openQuickAdd').addEventListener('click', ()=>openEditor());
 
-    // --- EXPORT / IMPORT ---
-    qs('#exportBtn').addEventListener('click', ()=>{
-      const dataStr = JSON.stringify(state,null,2);
-      const blob = new Blob([dataStr], {type:'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href=url; a.download='digital_notes.json'; a.click();
-      URL.revokeObjectURL(url);
+    // --- Export / Import ---
+    qs('#exportBtn').addEventListener('click', ()=>{ const dataStr = JSON.stringify(state,null,2); const blob = new Blob([dataStr], {type:'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download='digital_notes.json'; a.click(); URL.revokeObjectURL(url); });
+    qs('#importFile').addEventListener('change', e=>{ const f = e.target.files[0]; if(!f)return; const reader = new FileReader(); reader.onload = function(ev){ try{ state = JSON.parse(ev.target.result); saveState(); renderNotebooks(); renderNotes(); }catch(err){ alert('Archivo inválido'); } }; reader.readAsText(f); });
+
+    // --- Color panel behavior ---
+    qs('#openColorPanel').addEventListener('click', ()=>{ qs('#colorPanel').style.display = qs('#colorPanel').style.display === 'none' ? 'block' : 'none'; });
+    const updateColorPreview = ()=> {
+      const h = qs('#hRange').value, s = qs('#sRange').value, l = qs('#lRange').value, a = qs('#aRange').value;
+      qs('#colorPreview').style.background = `hsla(${h}, ${s}%, ${l}%, ${a})`;
+    };
+    ['hRange','sRange','lRange','aRange'].forEach(id=>qs('#'+id).addEventListener('input', updateColorPreview));
+    updateColorPreview();
+
+    qs('#applyBgColor').addEventListener('click', ()=>{
+      const bg = qs('#colorPreview').style.background;
+      if(editingNote) { editingNote.bgColor=bg; } else {
+        // apply to new note preview inside editor
+      }
+      // apply to editor background for visual feedback
+      qs('#editor').style.background = bg;
+      saveCurrentNote();
     });
-    qs('#importFile').addEventListener('change', e=>{
-      const f = e.target.files[0]; if(!f)return;
-      const reader = new FileReader();
-      reader.onload = function(ev){ try{ state = JSON.parse(ev.target.result); saveState(); renderNotebooks(); renderNotes(); }catch(err){ alert('Archivo inválido'); } };
-      reader.readAsText(f);
+    qs('#applyTextColor').addEventListener('click', ()=>{
+      const color = qs('#textColorPicker').value;
+      if(editingNote) editingNote.textColor=color;
+      qs('#editor').style.color = color;
+      saveCurrentNote();
     });
 
-    // --- INIT ---
-    loadState(); renderNotebooks(); renderNotes(); showView('notes');
+    // Quick palette generation
+    const quickColors = ['#fffbe6','#ffdfe8','#ffe9c7','#e6f7ff','#e6ffe6','#f0e6ff','#fff0f0','#f7f0ff'];
+    function renderQuickPalette(){
+      const container = qs('#quickPalette'); container.innerHTML='';
+      quickColors.forEach(c=>{
+        const btn = document.createElement('button'); btn.style.background=c;
+        btn.addEventListener('click', ()=>{ qs('#editor').style.background=c; if(editingNote) editingNote.bgColor=c; saveCurrentNote(); });
+        container.appendChild(btn);
+      });
+    }
+    renderQuickPalette();
+
+    // --- Insert image into editor ---
+    qs('#insertImageBtn').addEventListener('click', ()=> qs('#noteImageFile').click());
+    qs('#noteImageFile').addEventListener('change', async (e)=>{
+      const f = e.target.files[0]; if(!f) return;
+      const dataUrl = await fileToDataUrl(f);
+      // insert at caret position in contenteditable
+      insertHtmlAtCursor(`<img src="${dataUrl}" class="note-img" />`);
+      // autosave will pick up changes
+      saveCurrentNote();
+      e.target.value = '';
+    });
+
+    function insertHtmlAtCursor(html) {
+      const sel = window.getSelection();
+      if (!sel || !sel.rangeCount) {
+        qs('#editor').insertAdjacentHTML('beforeend', html);
+        return;
+      }
+      const range = sel.getRangeAt(0);
+      range.deleteContents();
+      const el = document.createElement('div');
+      el.innerHTML = html;
+      const frag = document.createDocumentFragment();
+      let node, lastNode;
+      while ((node = el.firstChild)) {
+        lastNode = frag.appendChild(node);
+      }
+      range.insertNode(frag);
+      // move cursor after inserted node
+      if (lastNode) {
+        range.setStartAfter(lastNode);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    }
+
+    // --- Utility: close overlays when clicking outside modal content ---
+    document.querySelectorAll('.overlay').forEach(ov=>{
+      ov.addEventListener('click', e=>{
+        if(e.target === ov){ ov.style.display='none'; editingNote=null; }
+      });
+    });
+
+    // --- Init ---
+    function init(){
+      loadState();
+      renderNotebooks();
+      renderNotes();
+      showView('notes');
+      // ensure editor notebook select exists
+      populateEditorNotebook();
+    }
+    init();
+
+    // Expose some functions for console debugging (optional)
+    window._dn = { state, saveState, renderNotes, renderNotebooks };
 
   </script>
 </body>
