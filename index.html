@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Digital Notes 2025</title>
+  <title>Digital Notes 2026</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
   <style>
     :root{
       --pink:#ffb6cc; 
@@ -250,10 +251,13 @@
       display:flex;
       gap:8px;
       margin-bottom:8px;
-      align-items:center
+      align-items:center;
+      flex-wrap:wrap
     }
 
-    .toolbar button{
+    .toolbar button,
+    .toolbar select,
+    .toolbar input[type="color"]{
       padding:10px;
       border-radius:10px;
       border:2px solid rgba(0,0,0,0.04);
@@ -262,13 +266,31 @@
       font-weight:700
     }
 
+    .toolbar select{
+      min-width:160px
+    }
+
+    .toolbar .tool-group{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center
+    }
+
+    .toolbar .tool-label{
+      font-size:12px;
+      font-weight:700;
+      color:#6b4350
+    }
+
     .editor{
       min-height:300px;
       border-radius:10px;
       border:1px solid #eee;
       padding:14px;
       overflow:auto;
-      background:transparent
+      background:transparent;
+      line-height:1.5
     }
 
     .editor[contenteditable]{outline:none}
@@ -344,6 +366,36 @@
       margin-top:8px
     }
 
+    .image-controls{
+      display:none;
+      gap:12px;
+      align-items:center;
+      flex-wrap:wrap;
+      padding:10px;
+      border-radius:12px;
+      border:1px solid #eee;
+      margin:8px 0 12px
+    }
+
+    .image-controls label{
+      font-size:12px;
+      font-weight:700;
+      color:#6b4350
+    }
+
+    .image-controls input[type="range"]{
+      width:160px
+    }
+
+    .image-controls select,
+    .image-controls button{
+      padding:8px 10px;
+      border-radius:8px;
+      border:1px solid #eee;
+      background:#fff;
+      cursor:pointer
+    }
+
     /* RESPONSIVE FIX FULL */
     @media(max-width:600px){
       header{
@@ -372,6 +424,21 @@
       }
       .logo-img{width:36px;height:36px}
       .logo-text{font-size:18px}
+      .modal{padding:14px}
+      .editor{min-height:220px}
+      .toolbar button,
+      .toolbar select,
+      .toolbar input[type="color"]{
+        padding:8px;
+        font-size:12px
+      }
+      .toolbar select{min-width:120px}
+      .icon-btn{
+        width:54px;
+        height:54px;
+        bottom:16px;
+        right:16px
+      }
     }
   </style>
 </head>
@@ -379,7 +446,7 @@
   <header>
     <div class="logo-area">
       <img src="logodn.index.png" alt="Logo" class="logo-img" />
-      <span class="logo-text">Digital Notes</span>
+      <span class="logo-text">Digital Notes 2026</span>
     </div>
 
     <div class="nav-right">
@@ -441,15 +508,57 @@
   <div class="overlay" id="overlayEditor">
     <div class="modal" style="max-width:940px">
       <input id="noteTitle" class="title-input" placeholder="Título (opcional)" />
-      <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
         <div class="toolbar">
-          <button data-cmd="bold">B</button>
-          <button data-cmd="italic">I</button>
-          <button data-cmd="insertUnorderedList">• Lista</button>
-          <button data-cmd="insertOrderedList">1. Lista</button>
-          <button id="openColorPanel">🎨</button>
-          <button id="insertImageBtn">🖼️</button>
-          <input type="file" id="noteImageFile" accept="image/*" class="file-input">
+          <div class="tool-group">
+            <button data-cmd="bold">B</button>
+            <button data-cmd="italic">I</button>
+            <button data-cmd="underline">U</button>
+            <button data-cmd="insertUnorderedList">• Lista</button>
+            <button data-cmd="insertOrderedList">1. Lista</button>
+            <button id="insertChecklist">☑️</button>
+          </div>
+          <div class="tool-group">
+            <span class="tool-label">Alinear</span>
+            <button data-align="left">⬅️</button>
+            <button data-align="center">↔️</button>
+            <button data-align="right">➡️</button>
+          </div>
+          <div class="tool-group">
+            <select id="fontSelect">
+              <option value="">Fuente</option>
+              <option value="Arial">Arial</option>
+              <option value="Montserrat">Montserrat</option>
+              <option value="Georgia">Georgia</option>
+              <option value="Times New Roman">Times New Roman</option>
+              <option value="Verdana">Verdana</option>
+              <option value="Courier New">Courier New</option>
+              <option value="Comic Sans MS">Comic Sans MS</option>
+            </select>
+            <select id="emojiSelect">
+              <option value="">😊 Emoji</option>
+              <option>😀</option>
+              <option>😍</option>
+              <option>✨</option>
+              <option>🔥</option>
+              <option>🌸</option>
+              <option>📌</option>
+              <option>✅</option>
+              <option>🧠</option>
+              <option>📚</option>
+              <option>💡</option>
+              <option>🎯</option>
+            </select>
+          </div>
+          <div class="tool-group">
+            <input type="color" id="highlightColor" value="#fff2a8" title="Subrayado de color">
+            <button id="applyHighlight">🖍️</button>
+            <button id="openColorPanel">🎨</button>
+          </div>
+          <div class="tool-group">
+            <button id="insertImageBtn">🖼️</button>
+            <input type="file" id="noteImageFile" accept="image/*" class="file-input">
+          </div>
         </div>
         <label>Guardar en:
           <select id="editorNotebook"></select>
@@ -479,11 +588,30 @@
         </div>
       </div>
 
+      <div class="image-controls" id="imageControls">
+        <label>Tamaño
+          <input type="range" id="imageSize" min="20" max="100" value="70">
+        </label>
+        <label>Rotar
+          <input type="range" id="imageRotate" min="-180" max="180" value="0">
+        </label>
+        <label>Posición
+          <select id="imageAlign">
+            <option value="left">Izquierda</option>
+            <option value="center">Centro</option>
+            <option value="right">Derecha</option>
+          </select>
+        </label>
+        <button id="removeImageBtn">Eliminar imagen</button>
+      </div>
+
       <div id="editor" class="editor" contenteditable="true" spellcheck="true"></div>
     </div>
   </div>
 
-  <div class="icon-btn" id="fab" title="Agregar nota">+</div>
+  <div class="icon-btn" id="fab" title="Agregar nota">
+    <img src="logodn.index.png" alt="Digital Notes" style="width:36px;height:36px;object-fit:contain;border-radius:8px">
+  </div>
 
   <template id="noteCardTemplate">
     <div class="note-card" draggable="true">
@@ -495,10 +623,10 @@
 
   <script>
     /* ---------------------------
-       Digital Notes 2025 - JS
+       Digital Notes 2026 - JS
        Todo en un solo archivo
        --------------------------- */
-    const STORAGE_KEY = 'digitalNotesData_v5';
+    const STORAGE_KEY = 'digitalNotesData_v6';
     let state = { notebooks: [], notes: [], darkMode: false };
     const uid = ()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
     const qs = s => document.querySelector(s);
@@ -603,6 +731,7 @@
 
     // --- Notes CRUD ---
     let editingNote=null;
+    let currentImage = null;
     function openEditor(note=null){
       editingNote = note;
       qs('#overlayEditor').style.display='flex';
@@ -611,12 +740,18 @@
       qs('#deleteNoteBtn').style.display = note ? 'inline-block':'none';
       populateEditorNotebook();
       setupAutosave();
+      qs('#imageControls').style.display = 'none';
+      currentImage = null;
       // set current colors preview
       if(note){
         if(note.bgColor) qs('#colorPreview').style.background = note.bgColor;
         if(note.textColor) qs('#textColorPicker').value = note.textColor;
+        qs('#editor').style.background = note.bgColor || '';
+        qs('#editor').style.color = note.textColor || '';
       } else {
         qs('#colorPreview').style.background = '';
+        qs('#editor').style.background = '';
+        qs('#editor').style.color = '';
       }
     }
     function closeEditor(){
@@ -624,23 +759,35 @@
       editingNote=null;
     }
 
-    qs('#saveNote').addEventListener('click', ()=>{ saveCurrentNote(); });
+    qs('#saveNote').addEventListener('click', ()=>{ saveCurrentNote({closeEditor:true}); });
     qs('#deleteNoteBtn').addEventListener('click', ()=>{
       if(editingNote && confirm('¿Eliminar nota?')){ state.notes = state.notes.filter(n=>n.id!==editingNote.id); saveState(); renderNotes(); closeEditor(); }
     });
 
-    function saveCurrentNote(){
+    function saveCurrentNote({closeEditor=false} = {}){
       const title = qs('#noteTitle').value;
       const content = qs('#editor').innerHTML;
       const notebook = qs('#editorNotebook').value || state.notebooks[0].id;
-      if(editingNote){ editingNote.title=title; editingNote.content=content; editingNote.notebook=notebook; editingNote.updated=Date.now(); }
-      else{ state.notes.push({id:uid(),title,content,notebook,updated:Date.now(), bgColor:null, textColor:null}); }
-      saveState(); renderNotes(); editingNote=null; closeEditor();
+      if(editingNote){
+        editingNote.title=title;
+        editingNote.content=content;
+        editingNote.notebook=notebook;
+        editingNote.updated=Date.now();
+      } else {
+        const newNote = {id:uid(),title,content,notebook,updated:Date.now(), bgColor:null, textColor:null};
+        state.notes.push(newNote);
+        editingNote = newNote;
+      }
+      saveState(); renderNotes();
+      if(closeEditor){ editingNote=null; closeEditor(); }
     }
 
     function setupAutosave(){
       const editor = qs('#editor'); const titleEl = qs('#noteTitle');
-      let timer; editor.oninput = titleEl.oninput = ()=>{ clearTimeout(timer); timer=setTimeout(saveCurrentNote,700); };
+      let timer; editor.oninput = titleEl.oninput = ()=>{
+        clearTimeout(timer);
+        timer=setTimeout(()=>saveCurrentNote({closeEditor:false}),700);
+      };
     }
 
     // --- Notebooks CRUD ---
@@ -703,13 +850,13 @@
       }
       // apply to editor background for visual feedback
       qs('#editor').style.background = bg;
-      saveCurrentNote();
+      saveCurrentNote({closeEditor:false});
     });
     qs('#applyTextColor').addEventListener('click', ()=>{
       const color = qs('#textColorPicker').value;
       if(editingNote) editingNote.textColor=color;
       qs('#editor').style.color = color;
-      saveCurrentNote();
+      saveCurrentNote({closeEditor:false});
     });
 
     // Quick palette generation
@@ -718,7 +865,7 @@
       const container = qs('#quickPalette'); container.innerHTML='';
       quickColors.forEach(c=>{
         const btn = document.createElement('button'); btn.style.background=c;
-        btn.addEventListener('click', ()=>{ qs('#editor').style.background=c; if(editingNote) editingNote.bgColor=c; saveCurrentNote(); });
+        btn.addEventListener('click', ()=>{ qs('#editor').style.background=c; if(editingNote) editingNote.bgColor=c; saveCurrentNote({closeEditor:false}); });
         container.appendChild(btn);
       });
     }
@@ -730,9 +877,9 @@
       const f = e.target.files[0]; if(!f) return;
       const dataUrl = await fileToDataUrl(f);
       // insert at caret position in contenteditable
-      insertHtmlAtCursor(`<img src="${dataUrl}" class="note-img" />`);
+      insertHtmlAtCursor(`<img src="${dataUrl}" class="note-img" style="width:70%;display:block;margin:8px 0" />`);
       // autosave will pick up changes
-      saveCurrentNote();
+      saveCurrentNote({closeEditor:false});
       e.target.value = '';
     });
 
@@ -760,6 +907,109 @@
         sel.addRange(range);
       }
     }
+
+    // --- Rich text tools ---
+    qsa('.toolbar [data-cmd]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.execCommand(btn.dataset.cmd, false, null);
+        qs('#editor').focus();
+      });
+    });
+
+    qsa('.toolbar [data-align]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const align = btn.dataset.align;
+        const cmd = align === 'left' ? 'justifyLeft' : align === 'center' ? 'justifyCenter' : 'justifyRight';
+        document.execCommand(cmd, false, null);
+        qs('#editor').focus();
+      });
+    });
+
+    qs('#fontSelect').addEventListener('change', (e)=>{
+      if(!e.target.value) return;
+      document.execCommand('fontName', false, e.target.value);
+      qs('#editor').focus();
+      e.target.value = '';
+    });
+
+    qs('#emojiSelect').addEventListener('change', (e)=>{
+      if(!e.target.value) return;
+      insertHtmlAtCursor(`${e.target.value} `);
+      saveCurrentNote({closeEditor:false});
+      e.target.value = '';
+    });
+
+    qs('#applyHighlight').addEventListener('click', ()=>{
+      const color = qs('#highlightColor').value;
+      document.execCommand('hiliteColor', false, color);
+      qs('#editor').focus();
+    });
+
+    qs('#insertChecklist').addEventListener('click', ()=>{
+      insertHtmlAtCursor(`<div><label><input type="checkbox" /> Tarea</label></div>`);
+      saveCurrentNote({closeEditor:false});
+    });
+
+    // --- Image controls ---
+    const imageControls = qs('#imageControls');
+    const imageSize = qs('#imageSize');
+    const imageRotate = qs('#imageRotate');
+    const imageAlign = qs('#imageAlign');
+
+    qs('#editor').addEventListener('click', (e)=>{
+      const target = e.target;
+      if(target && target.tagName === 'IMG'){
+        currentImage = target;
+        imageControls.style.display = 'flex';
+        const width = parseInt(target.style.width || '70', 10);
+        imageSize.value = Number.isNaN(width) ? 70 : width;
+        const rotateMatch = target.style.transform.match(/rotate\(([-\d.]+)deg\)/);
+        imageRotate.value = rotateMatch ? rotateMatch[1] : 0;
+        const alignValue = target.dataset.align || 'left';
+        imageAlign.value = alignValue;
+      } else {
+        currentImage = null;
+        imageControls.style.display = 'none';
+      }
+    });
+
+    function applyImageAlign(value){
+      if(!currentImage) return;
+      currentImage.dataset.align = value;
+      currentImage.style.display = 'block';
+      currentImage.style.marginLeft = value === 'right' ? 'auto' : '0';
+      currentImage.style.marginRight = value === 'left' ? 'auto' : '0';
+      if(value === 'center'){
+        currentImage.style.marginLeft = 'auto';
+        currentImage.style.marginRight = 'auto';
+      }
+    }
+
+    imageSize.addEventListener('input', ()=>{
+      if(!currentImage) return;
+      currentImage.style.width = `${imageSize.value}%`;
+      saveCurrentNote({closeEditor:false});
+    });
+
+    imageRotate.addEventListener('input', ()=>{
+      if(!currentImage) return;
+      currentImage.style.transform = `rotate(${imageRotate.value}deg)`;
+      saveCurrentNote({closeEditor:false});
+    });
+
+    imageAlign.addEventListener('change', ()=>{
+      if(!currentImage) return;
+      applyImageAlign(imageAlign.value);
+      saveCurrentNote({closeEditor:false});
+    });
+
+    qs('#removeImageBtn').addEventListener('click', ()=>{
+      if(!currentImage) return;
+      currentImage.remove();
+      currentImage = null;
+      imageControls.style.display = 'none';
+      saveCurrentNote({closeEditor:false});
+    });
 
     // --- Utility: close overlays when clicking outside modal content ---
     document.querySelectorAll('.overlay').forEach(ov=>{
