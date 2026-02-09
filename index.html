@@ -13,13 +13,31 @@
       --bg2:#ffe9c7; 
       --accent:#c36b85; 
       --text:#222;
+      --heading:#111;
+      --card-bg:#ffffff;
+      --panel-bg:#ffffff;
+      --panel-text:#222;
+      --muted:#6b4350;
+      --border:#eee;
+      --input-bg:#ffffff;
+      --nav-bg:linear-gradient(90deg,#ffeef6,#fff6ee);
+      --add-cover-bg:rgba(255,255,255,0.6);
     }
     [data-theme="dark"]{
       --bg1:#1a1a1a;
       --bg2:#302b2b;
-      --text:#ffffff;
+      --text:#f5f5f5;
+      --heading:#ffffff;
       --pink:#8b5b67;
       --accent:#c36b85;
+      --card-bg:#262626;
+      --panel-bg:#1f1f1f;
+      --panel-text:#f5f5f5;
+      --muted:#c8a5b1;
+      --border:#3a3a3a;
+      --input-bg:#262626;
+      --nav-bg:#2b2b2b;
+      --add-cover-bg:#2b2b2b;
     }
 
     *{box-sizing:border-box}
@@ -68,11 +86,11 @@
     }
 
     .nav-links a{
-      color:#6b4350;
+      color:var(--muted);
       text-decoration:none;
       padding:8px 12px;
       border-radius:12px;
-      background:linear-gradient(90deg,#ffeef6,#fff6ee);
+      background:var(--nav-bg);
       font-weight:700
     }
 
@@ -80,13 +98,15 @@
       padding:8px 12px;
       border-radius:20px;
       border:0;
-      min-width:140px
+      min-width:140px;
+      background:var(--input-bg);
+      color:var(--text)
     }
 
     main{padding:18px 20px}
 
     h1.section{
-      color:#111;
+      color:var(--heading);
       margin:18px 0
     }
 
@@ -95,6 +115,14 @@
       gap:12px;
       align-items:center;
       margin-bottom:12px
+    }
+
+    .controls select{
+      padding:6px 8px;
+      border-radius:8px;
+      border:1px solid var(--border);
+      background:var(--input-bg);
+      color:var(--text)
     }
 
     .btn{
@@ -126,8 +154,8 @@
       box-shadow:0 8px 20px rgba(0,0,0,0.08);
       position:relative;
       overflow:hidden;
-      background:#fff;
-      color:#222
+      background:var(--card-bg);
+      color:var(--panel-text)
     }
 
     .note-title{
@@ -142,7 +170,7 @@
 
     .note-meta{
       font-size:12px;
-      color:rgba(0,0,0,0.5)
+      color:var(--muted)
     }
 
     .notebooks{
@@ -168,7 +196,8 @@
 
     .notebook p{
       margin:8px 0 0;
-      font-weight:700
+      font-weight:700;
+      color:var(--text)
     }
 
     .notebook .dots{
@@ -176,7 +205,7 @@
       top:8px;
       right:8px;
       cursor:pointer;
-      color:#333;
+      color:var(--text);
       font-size:22px;
       z-index:50
     }
@@ -186,7 +215,7 @@
       position:absolute;
       top:36px;
       right:8px;
-      background:#fff;
+      background:var(--panel-bg);
       padding:8px;
       border-radius:10px;
       box-shadow:0 12px 30px rgba(0,0,0,0.12);
@@ -211,12 +240,12 @@
       width:150px;
       height:200px;
       border-radius:12px;
-      background:rgba(255,255,255,0.6);
+      background:var(--add-cover-bg);
       display:flex;
       align-items:center;
       justify-content:center;
       font-size:48px;
-      color:#666
+      color:var(--muted)
     }
 
     .overlay{
@@ -231,7 +260,8 @@
     }
 
     .modal{
-      background:#fff;
+      background:var(--panel-bg);
+      color:var(--panel-text);
       width:100%;
       max-width:960px;
       border-radius:12px;
@@ -243,7 +273,9 @@
       width:100%;
       padding:10px;
       border-radius:10px;
-      border:1px solid #eee;
+      border:1px solid var(--border);
+      background:var(--input-bg);
+      color:var(--panel-text);
       margin-bottom:10px;
       font-weight:700
     }
@@ -262,7 +294,8 @@
       padding:10px;
       border-radius:10px;
       border:2px solid rgba(0,0,0,0.04);
-      background:#fff;
+      background:var(--panel-bg);
+      color:var(--panel-text);
       cursor:pointer;
       font-weight:700
     }
@@ -281,7 +314,7 @@
     .toolbar .tool-label{
       font-size:12px;
       font-weight:700;
-      color:#6b4350
+      color:var(--muted)
     }
 
     .toolbar .text-color-tool{
@@ -289,10 +322,10 @@
       height:44px;
       border-radius:12px;
       border:2px solid rgba(0,0,0,0.06);
-      background:#fff;
+      background:var(--panel-bg);
       font-weight:800;
       font-size:18px;
-      color:#6b4350
+      color:var(--muted)
     }
 
     .toolbar .text-color-picker{
@@ -304,11 +337,13 @@
 
     .editor{
       min-height:300px;
+      max-height:min(60vh, 420px);
       border-radius:10px;
-      border:1px solid #eee;
+      border:1px solid var(--border);
       padding:14px;
       overflow:auto;
-      background:transparent;
+      background:var(--panel-bg);
+      color:var(--panel-text);
       line-height:1.5
     }
 
@@ -416,14 +451,16 @@
       flex-wrap:wrap;
       padding:10px;
       border-radius:12px;
-      border:1px solid #eee;
+      border:1px solid var(--border);
+      background:var(--panel-bg);
+      color:var(--panel-text);
       margin:8px 0 12px
     }
 
     .image-controls label{
       font-size:12px;
       font-weight:700;
-      color:#6b4350
+      color:var(--muted)
     }
 
     .image-controls input[type="range"]{
@@ -434,15 +471,32 @@
     .image-controls button{
       padding:8px 10px;
       border-radius:8px;
-      border:1px solid #eee;
-      background:#fff;
+      border:1px solid var(--border);
+      background:var(--panel-bg);
+      color:var(--panel-text);
       cursor:pointer
+    }
+
+    .controls label{
+      color:var(--text)
+    }
+
+    .modal label{
+      color:var(--panel-text)
+    }
+
+    .modal select{
+      padding:6px 8px;
+      border-radius:8px;
+      border:1px solid var(--border);
+      background:var(--input-bg);
+      color:var(--panel-text)
     }
 
     footer{
       text-align:center;
       padding:20px;
-      color:#6b4350;
+      color:var(--muted);
       font-weight:700
     }
 
@@ -855,7 +909,16 @@
 
     // --- Notebooks CRUD ---
     let editingNotebook=null; let renameOnly=false;
-    function openNotebookModal(nb=null,opt={}){ editingNotebook=nb||null; renameOnly=opt.renameOnly||false; qs('#overlayNotebook').style.display='flex'; qs('#nbModalTitle').textContent = nb ? (renameOnly?'Renombrar cuaderno':'Editar cuaderno'):'Nuevo cuaderno'; qs('#nbName').value = nb?.name||''; }
+    function openNotebookModal(nb=null,opt={}){
+      editingNotebook=nb||null;
+      renameOnly=opt.renameOnly||false;
+      qs('#overlayNotebook').style.display='flex';
+      qs('#nbModalTitle').textContent = nb ? (renameOnly?'Renombrar cuaderno':'Editar cuaderno'):'Nuevo cuaderno';
+      qs('#nbName').value = nb?.name||'';
+      const coverInput = qs('#nbCoverFile');
+      coverInput.value = '';
+      coverInput.disabled = renameOnly;
+    }
     qs('#nbCancel').addEventListener('click', ()=>qs('#overlayNotebook').style.display='none');
     qs('#nbSave').addEventListener('click', async ()=>{
       const name = qs('#nbName').value.trim(); if(!name) return alert('Nombre requerido');
