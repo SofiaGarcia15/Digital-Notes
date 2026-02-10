@@ -186,13 +186,6 @@
       border:1px solid rgba(0,0,0,0.08)
     }
 
-    .note-thumb.small{
-      width:min(96px, 42%);
-      height:78px;
-      margin:8px 0 10px;
-      display:block;
-    }
-
     .note-meta{
       font-size:12px;
       color:var(--muted)
@@ -517,29 +510,6 @@
       margin-top:12px
     }
 
-    .notebook-workspace{
-      margin-top:22px;
-      padding:16px;
-      border-radius:16px;
-      border:1px solid var(--border);
-      background:var(--panel-bg);
-      color:var(--panel-text)
-    }
-
-    .notebook-workspace-header{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:12px;
-      flex-wrap:wrap
-    }
-
-    .notebook-workspace-title-wrap{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-
     .notebook-notes .note-card{
       min-height:220px;
       padding:18px;
@@ -799,16 +769,6 @@
           <p>Agregar portada</p>
         </div>
       </div>
-      <div id="notebookWorkspace" class="notebook-workspace" style="display:none">
-        <div class="notebook-workspace-header">
-          <div class="notebook-workspace-title-wrap">
-            <button id="openBookModeInline" class="btn">Modo Libreta</button>
-            <h3 id="notebookViewTitle" style="margin:0">Notas del cuaderno</h3>
-          </div>
-          <button id="closeNotebookView" class="btn" style="background:#ddd">Cerrar</button>
-        </div>
-        <div class="notebook-notes" id="notebookNotesGrid"></div>
-      </div>
     </section>
   </main>
 
@@ -936,6 +896,18 @@
           <button id="scrollDownBtn" title="Bajar">⬇️</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Overlay para ver notas de un cuaderno -->
+  <div class="overlay" id="overlayNotebookView">
+    <div class="modal">
+      <h3 id="notebookViewTitle">Notas del cuaderno</h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <button id="openBookMode" class="btn">Modo Libreta</button>
+        <button id="closeNotebookView" class="btn" style="background:#ddd">Cerrar</button>
+      </div>
+      <div class="notebook-notes" id="notebookNotesGrid"></div>
     </div>
   </div>
 
@@ -1103,9 +1075,8 @@
         const firstImage = getFirstImageSrc(n.content);
         const meta = document.createElement('div'); meta.className='note-meta'; meta.textContent = new Date(n.updated).toLocaleString();
         card.appendChild(title);
-        card.appendChild(body);
-        if(firstImage){ const thumb = document.createElement('img'); thumb.className='note-thumb small'; thumb.src=firstImage; thumb.alt='Imagen de la nota'; card.appendChild(thumb); }
-        card.appendChild(meta);
+        if(firstImage){ const thumb = document.createElement('img'); thumb.className='note-thumb'; thumb.src=firstImage; thumb.alt='Imagen de la nota'; card.appendChild(thumb); }
+        card.appendChild(body); card.appendChild(meta);
         if(n.bgColor) card.style.background=n.bgColor;
         if(n.textColor) card.style.color=n.textColor;
         card.addEventListener('click', ()=>openEditor(n));
@@ -1126,8 +1097,6 @@
       const nb = state.notebooks.find(n=>n.id===notebookId);
       qs('#notebookViewTitle').textContent = nb ? `Notas del cuaderno: ${nb.name}` : 'Notas del cuaderno';
       const grid = qs('#notebookNotesGrid');
-      const workspace = qs('#notebookWorkspace');
-      workspace.style.display = 'block';
       grid.innerHTML = '';
       const notes = getNotebookNotes(notebookId);
       if(notes.length === 0){
@@ -1145,31 +1114,24 @@
           if(n.bgColor) card.style.background = n.bgColor;
           if(n.textColor) card.style.color = n.textColor;
           card.appendChild(title);
-          card.appendChild(body);
-          if(firstImage){ const thumb=document.createElement('img'); thumb.className='note-thumb small'; thumb.src=firstImage; thumb.alt='Imagen de la nota'; card.appendChild(thumb); }
-          card.appendChild(meta);
+          if(firstImage){ const thumb=document.createElement('img'); thumb.className='note-thumb'; thumb.src=firstImage; thumb.alt='Imagen de la nota'; card.appendChild(thumb); }
+          card.appendChild(body); card.appendChild(meta);
           card.addEventListener('click', ()=>openEditor(n));
           grid.appendChild(card);
         });
       }
+      qs('#overlayNotebookView').style.display='flex';
     }
 
     function closeNotebookView(){
-      qs('#notebookWorkspace').style.display='none';
-      activeNotebookId = null;
-    }
-
-
-    function refreshNotebookWorkspace(){
-      if(activeNotebookId && qs('#notebookWorkspace').style.display === 'block'){
-        openNotebookView(activeNotebookId);
-      }
+      qs('#overlayNotebookView').style.display='none';
     }
 
     function openBookMode(){
       if(!activeNotebookId) return;
       bookPageIndex = 0;
       updateBookPage('forward');
+      qs('#overlayNotebookView').style.display='none';
       qs('#overlayBookMode').style.display='flex';
     }
 
@@ -1194,7 +1156,7 @@
       qs('#bookModeTitle').textContent = nb ? `Modo Libreta: ${nb.name}` : 'Modo Libreta';
       qs('#bookPageTitle').textContent = note.title || 'Sin título';
       qs('#bookPageContent').innerHTML = note.content || '';
-      qs('#bookPageMeta').textContent = `Hoja ${bookPageIndex + 1} de ${notes.length} · ${new Date(note.updated).toLocaleDateString()}`;
+      qs('#bookPageMeta').textContent = `Página ${bookPageIndex + 1} de ${notes.length} · ${new Date(note.updated).toLocaleDateString()}`;
       page.style.background = note.bgColor || '#f6ecd2';
       page.style.color = note.textColor || '';
       page.classList.remove('flip-forward','flip-back','turning');
@@ -1210,9 +1172,9 @@
     qs('#closeEditor').addEventListener('click', ()=>closeEditor());
     document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeEditor(); qs('#overlayNotebook').style.display='none'; closeNotebookView(); closeBookMode(); } });
     qs('#closeNotebookView').addEventListener('click', closeNotebookView);
-    qs('#openBookModeInline').addEventListener('click', openBookMode);
+    qs('#openBookMode').addEventListener('click', openBookMode);
     qs('#exitBookMode').addEventListener('click', closeBookMode);
-    qs('#backToNotebookView').addEventListener('click', closeBookMode);
+    qs('#backToNotebookView').addEventListener('click', ()=>{ closeBookMode(); qs('#overlayNotebookView').style.display='flex'; });
     qs('#tutorialClose').addEventListener('click', ()=>{ qs('#overlayTutorial').style.display='none'; localStorage.setItem(ONBOARDING_KEY, 'done'); });
     qs('#prevPageBtn').addEventListener('click', ()=>{
       const notes = getNotebookNotes(activeNotebookId);
@@ -1259,7 +1221,7 @@
 
     qs('#saveNote').addEventListener('click', ()=>{ saveCurrentNote({closeEditor:true}); });
     qs('#deleteNoteBtn').addEventListener('click', ()=>{
-      if(editingNote && confirm('¿Eliminar nota?')){ state.notes = state.notes.filter(n=>n.id!==editingNote.id); saveState(); renderNotes(); refreshNotebookWorkspace(); closeEditor(); }
+      if(editingNote && confirm('¿Eliminar nota?')){ state.notes = state.notes.filter(n=>n.id!==editingNote.id); saveState(); renderNotes(); closeEditor(); }
     });
 
     function saveCurrentNote({closeEditor=false} = {}){
@@ -1276,7 +1238,7 @@
         state.notes.push(newNote);
         editingNote = newNote;
       }
-      saveState(); renderNotes(); refreshNotebookWorkspace();
+      saveState(); renderNotes();
       if(closeEditor){ editingNote=null; closeEditor(); }
     }
 
@@ -1316,7 +1278,7 @@
       if(!confirm('Eliminar libreta y sus notas. ¿Continuar?')) return;
       state.notebooks = state.notebooks.filter(nb=>nb.id!==id);
       state.notes = state.notes.filter(n=>n.notebook!==id);
-      saveState(); renderNotebooks(); renderNotes(); refreshNotebookWorkspace();
+      saveState(); renderNotebooks(); renderNotes();
     }
 
     function populateNotebookFilters(){
@@ -1327,7 +1289,7 @@
     }
     function populateEditorNotebook(){ populateNotebookFilters(); if(editingNote) qs('#editorNotebook').value = editingNote.notebook; }
 
-    function moveNoteToNotebook(noteId, nbId){ const note = state.notes.find(n=>n.id===noteId); if(note){ note.notebook=nbId; saveState(); renderNotes(); refreshNotebookWorkspace(); } }
+    function moveNoteToNotebook(noteId, nbId){ const note = state.notes.find(n=>n.id===noteId); if(note){ note.notebook=nbId; saveState(); renderNotes(); } }
 
     // --- Views ---
     function showView(view){ qs('#view-notes').style.display=view==='notes'?'block':'none'; qs('#view-cuadernos').style.display=view==='cuadernos'?'block':'none'; }
@@ -1339,7 +1301,7 @@
 
     // --- Export / Import ---
     qs('#exportBtn').addEventListener('click', ()=>{ const dataStr = JSON.stringify(state,null,2); const blob = new Blob([dataStr], {type:'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download='digital_notes.json'; a.click(); URL.revokeObjectURL(url); });
-    qs('#importFile').addEventListener('change', e=>{ const f = e.target.files[0]; if(!f)return; const reader = new FileReader(); reader.onload = function(ev){ try{ state = JSON.parse(ev.target.result); saveState(); renderNotebooks(); renderNotes(); refreshNotebookWorkspace(); }catch(err){ alert('Archivo inválido'); } }; reader.readAsText(f); });
+    qs('#importFile').addEventListener('change', e=>{ const f = e.target.files[0]; if(!f)return; const reader = new FileReader(); reader.onload = function(ev){ try{ state = JSON.parse(ev.target.result); saveState(); renderNotebooks(); renderNotes(); }catch(err){ alert('Archivo inválido'); } }; reader.readAsText(f); });
 
     // --- Color panel behavior ---
     qs('#openColorPanel').addEventListener('click', ()=>{ qs('#colorPanel').style.display = qs('#colorPanel').style.display === 'none' ? 'block' : 'none'; });
@@ -1567,12 +1529,12 @@
         alert('Tu navegador no soporta solicitud de multimedia.');
         return;
       }
-      const wants = confirm('¿Quieres permitir acceso solo a fotos/cámara para enriquecer tus notas?');
+      const wants = confirm('¿Quieres permitir acceso a multimedia (cámara/micrófono) para enriquecer tus notas?');
       if(!wants) return;
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+        const stream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
         stream.getTracks().forEach(track=>track.stop());
-        alert('Acceso a fotos/cámara habilitado.');
+        alert('Acceso multimedia habilitado.');
       } catch (err) {
         alert('No se pudo activar el acceso multimedia. Puedes intentarlo luego desde tu navegador.');
       }
