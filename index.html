@@ -212,7 +212,13 @@
       width:150px;
       text-align:center;
       position:relative;
-      border-radius:12px
+      border-radius:12px;
+      transition:transform .2s ease, box-shadow .2s ease;
+      animation:notebookFloat 3.4s ease-in-out infinite;
+    }
+
+    .notebook:hover{
+      transform:translateY(-6px) scale(1.02);
     }
 
     .notebook img{
@@ -220,7 +226,18 @@
       height:200px;
       object-fit:cover;
       border-radius:12px;
-      display:block
+      display:block;
+      box-shadow:0 10px 22px rgba(0,0,0,0.16)
+    }
+
+    .notebook img,
+    .notebook p{
+      cursor:pointer;
+    }
+
+    @keyframes notebookFloat{
+      0%,100%{ transform:translateY(0); }
+      50%{ transform:translateY(-5px); }
     }
 
     .notebook p{
@@ -530,16 +547,6 @@
       color:var(--panel-text)
     }
 
-    .notebook-shell.exclusive-mode #notebooksList{
-      display:none
-    }
-
-    .notebook-shell.exclusive-mode #notebookWorkspace{
-      display:block;
-      margin-top:0;
-      min-height:66vh
-    }
-
     .notebook-workspace-header{
       display:flex;
       justify-content:space-between;
@@ -559,7 +566,7 @@
       padding:16px;
       border-radius:14px;
       border:1px solid var(--border);
-      background:linear-gradient(135deg, rgba(255,255,255,0.48), rgba(255,192,212,0.22));
+      background:linear-gradient(135deg,#ffe5f0,#ffd6ea);
     }
 
     .notebook-mode-panel h4{
@@ -589,6 +596,44 @@
       font-size:15px
     }
 
+
+    .notebook-open-mode-btn{
+      position:relative;
+      display:inline-flex;
+      align-items:center;
+      gap:12px;
+      padding:11px 18px;
+      border-radius:999px;
+      border:none;
+      font-weight:700;
+      color:#6b2b4f;
+      background:linear-gradient(180deg,#ffd1e8,#ffb7da);
+      box-shadow:0 8px 18px rgba(179,73,123,0.22);
+      cursor:pointer;
+    }
+
+    .notebook-open-mode-btn .book-icon{
+      width:26px;
+      height:18px;
+      border-radius:4px;
+      position:relative;
+      display:inline-block;
+      background:#fff3fa;
+      border:2px solid #b55286;
+      box-shadow:inset -7px 0 0 rgba(181,82,134,0.18);
+    }
+
+    .notebook-open-mode-btn .book-icon::before{
+      content:'';
+      position:absolute;
+      top:-2px;
+      bottom:-2px;
+      left:50%;
+      width:2px;
+      transform:translateX(-50%);
+      background:#b55286;
+    }
+
     .book-shell{
       display:flex;
       align-items:center;
@@ -616,10 +661,10 @@
       min-height:500px;
       perspective:1200px;
       position:relative;
-      background:linear-gradient(160deg,#27315a,#1f2342);
+      background:linear-gradient(150deg,#ffcae3,#f7b7d8);
       border-radius:18px;
       padding:28px 20px;
-      box-shadow:0 20px 42px rgba(0,0,0,0.35)
+      box-shadow:0 20px 42px rgba(140,48,101,0.32)
     }
 
     .book-spread{
@@ -643,13 +688,13 @@
       width:10px;
       transform:translateX(-50%);
       border-radius:12px;
-      background:linear-gradient(180deg,#b8a189,#8d745f);
+      background:linear-gradient(180deg,#c478a1,#a35280);
       box-shadow:0 0 12px rgba(0,0,0,0.2);
       z-index:3;
     }
 
     .book-leaf{
-      background:#f6ecd2;
+      background:#fff5fa;
       padding:24px 28px;
       position:relative;
       overflow:hidden
@@ -661,11 +706,11 @@
       inset:0;
       background:
         linear-gradient(90deg,rgba(0,0,0,0.06),transparent 60%),
-        radial-gradient(circle at top right, rgba(255,182,204,0.35), transparent 55%),
+        radial-gradient(circle at top right, rgba(255,126,188,0.24), transparent 55%),
         repeating-linear-gradient(
           to bottom,
-          rgba(153,123,89,0.24),
-          rgba(153,123,89,0.24) 1px,
+          rgba(175,105,147,0.24),
+          rgba(175,105,147,0.24) 1px,
           transparent 1px,
           transparent 24px
         );
@@ -715,7 +760,7 @@
     .book-cover-screen{
       min-height:440px;
       border-radius:14px;
-      background:linear-gradient(135deg,#b56791,#8a3e68);
+      background:linear-gradient(135deg,#f08aba,#d8689f);
       display:flex;
       flex-direction:column;
       align-items:center;
@@ -927,27 +972,29 @@
 
     <section id="view-cuadernos" class="notebook-shell" style="display:none">
       <h1 class="section">Mis cuadernos</h1>
+      <p style="margin-top:-6px;color:var(--muted)">Esta vista es solo para cuadernos. Haz clic en uno para abrir su página exclusiva de notas.</p>
       <div class="notebooks" id="notebooksList">
         <div class="notebook">
           <div class="add-cover" id="addNotebookBtn">+</div>
           <p>Agregar portada</p>
         </div>
       </div>
-      <div id="notebookWorkspace" class="notebook-workspace" style="display:none">
-        <div class="notebook-workspace-header">
-          <div class="notebook-workspace-title-wrap">
-            <h3 id="notebookViewTitle" style="margin:0">Página del cuaderno</h3>
-            <p id="notebookViewSubtitle" style="margin:0;color:var(--muted)">Aquí verás las notas recientes de este cuaderno.</p>
-          </div>
-          <button id="closeNotebookView" class="btn" style="background:#ddd">Cerrar</button>
+    </section>
+
+    <section id="view-notebook-notes" class="notebook-workspace" style="display:none">
+      <div class="notebook-workspace-header">
+        <div class="notebook-workspace-title-wrap">
+          <button id="closeNotebookView" class="btn" style="background:#ddd">⟵ Volver a cuadernos</button>
+          <h3 id="notebookViewTitle" style="margin:0">Página del cuaderno</h3>
+          <p id="notebookViewSubtitle" style="margin:0;color:var(--muted)">Aquí verás las notas recientes de este cuaderno.</p>
         </div>
-        <div class="notebook-mode-panel">
-          <h4>Modo libreta</h4>
-          <p>Empieza con la portada elegida y luego abre las hojas del cuaderno con animación de cambio de página.</p>
-          <button id="openBookModeInline" class="btn">Abrir modo libreta</button>
-        </div>
-        <div class="notebook-notes" id="notebookNotesGrid"></div>
       </div>
+      <div class="notebook-mode-panel">
+        <h4>Modo libreta</h4>
+        <p>Vista de doble página, fondo rosa y animaciones activas en todas las hojas de este cuaderno.</p>
+        <button id="openBookModeInline" class="notebook-open-mode-btn"><span class="book-icon" aria-hidden="true"></span> Abrir modo libreta</button>
+      </div>
+      <div class="notebook-notes" id="notebookNotesGrid"></div>
     </section>
   </main>
 
@@ -1227,7 +1274,8 @@
         editBtn.addEventListener('click', e=>{ e.stopPropagation(); openNotebookModal(nb); menu.style.display='none'; });
         renameBtn.addEventListener('click', e=>{ e.stopPropagation(); openNotebookModal(nb, {renameOnly:true}); menu.style.display='none'; });
         delBtn.addEventListener('click', e=>{ e.stopPropagation(); if(confirm('¿Eliminar cuaderno y sus notas?')) deleteNotebook(nb.id); menu.style.display='none'; });
-        img.addEventListener('click', ()=>{ openNotebookView(nb.id); showView('cuadernos'); });
+        img.addEventListener('click', ()=>{ openNotebookView(nb.id); });
+        p.addEventListener('click', ()=>{ openNotebookView(nb.id); });
 
         container.appendChild(el);
       });
@@ -1277,13 +1325,11 @@
     function openNotebookView(notebookId){
       activeNotebookId = notebookId;
       const nb = state.notebooks.find(n=>n.id===notebookId);
-      const notebookSection = qs('#view-cuadernos');
-      notebookSection.classList.add('exclusive-mode');
-      qs('#notebookViewTitle').textContent = nb ? `Página del cuaderno: ${nb.name}` : 'Página del cuaderno';
+      qs('#notebookViewTitle').textContent = nb ? `Notas de: ${nb.name}` : 'Página del cuaderno';
       qs('#notebookViewSubtitle').textContent = nb ? `Sección exclusiva para las notas guardadas en ${nb.name}.` : 'Aquí verás las notas recientes de este cuaderno.';
       const grid = qs('#notebookNotesGrid');
-      const workspace = qs('#notebookWorkspace');
-      workspace.style.display = 'block';
+      qs('#view-cuadernos').style.display = 'none';
+      qs('#view-notebook-notes').style.display = 'block';
       grid.innerHTML = '';
       const notes = getNotebookNotes(notebookId);
       if(notes.length === 0){
@@ -1311,14 +1357,14 @@
     }
 
     function closeNotebookView(){
-      qs('#notebookWorkspace').style.display='none';
-      qs('#view-cuadernos').classList.remove('exclusive-mode');
+      qs('#view-notebook-notes').style.display='none';
+      qs('#view-cuadernos').style.display='block';
       activeNotebookId = null;
     }
 
 
     function refreshNotebookWorkspace(){
-      if(activeNotebookId && qs('#notebookWorkspace').style.display === 'block'){
+      if(activeNotebookId && qs('#view-notebook-notes').style.display === 'block'){
         openNotebookView(activeNotebookId);
       }
     }
@@ -1542,7 +1588,8 @@
     function showView(view){
       qs('#view-notes').style.display=view==='notes'?'block':'none';
       qs('#view-cuadernos').style.display=view==='cuadernos'?'block':'none';
-      if(view !== 'cuadernos') closeNotebookView();
+      qs('#view-notebook-notes').style.display='none';
+      if(view !== 'cuadernos') activeNotebookId = null;
     }
     qsa('.nav-links a').forEach(a=>a.addEventListener('click', e=>{ e.preventDefault(); showView(a.dataset.view); }));
 
