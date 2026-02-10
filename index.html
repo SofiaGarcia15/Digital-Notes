@@ -143,14 +143,14 @@
 
     .notes-grid{
       display:grid;
-      grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+      grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
       gap:18px
     }
 
     .note-card{
-      padding:14px;
+      padding:16px;
       border-radius:14px;
-      min-height:120px;
+      min-height:130px;
       box-shadow:0 8px 20px rgba(0,0,0,0.08);
       position:relative;
       overflow:hidden;
@@ -523,11 +523,21 @@
 
     .notebook-workspace{
       margin-top:22px;
-      padding:16px;
+      padding:18px;
       border-radius:16px;
       border:1px solid var(--border);
       background:var(--panel-bg);
       color:var(--panel-text)
+    }
+
+    .notebook-shell.exclusive-mode #notebooksList{
+      display:none
+    }
+
+    .notebook-shell.exclusive-mode #notebookWorkspace{
+      display:block;
+      margin-top:0;
+      min-height:66vh
     }
 
     .notebook-workspace-header{
@@ -587,6 +597,12 @@
       margin-top:12px
     }
 
+    .book-stage{
+      width:min(950px, 96vw);
+      display:flex;
+      justify-content:center
+    }
+
     .book-topbar{
       display:flex;
       justify-content:space-between;
@@ -596,7 +612,7 @@
     }
 
     .book-container{
-      width:min(950px, 96vw);
+      width:100%;
       min-height:500px;
       perspective:1200px;
       position:relative;
@@ -689,8 +705,46 @@
       white-space:pre-wrap;
       line-height:1.85;
       min-height:300px;
+      max-height:320px;
+      overflow:auto;
+      padding-right:6px;
       position:relative;
       z-index:2
+    }
+
+    .book-cover-screen{
+      min-height:440px;
+      border-radius:14px;
+      background:linear-gradient(135deg,#b56791,#8a3e68);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:16px;
+      box-shadow:inset 0 0 0 8px rgba(255,255,255,0.08)
+    }
+
+    .book-cover-screen img{
+      width:min(240px,56vw);
+      max-height:320px;
+      object-fit:cover;
+      border-radius:12px;
+      box-shadow:0 20px 32px rgba(0,0,0,0.24)
+    }
+
+    .book-cover-fallback{
+      width:min(240px,56vw);
+      height:min(320px,74vw);
+      border-radius:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(255,255,255,0.26);
+      color:#fff;
+      font-weight:700;
+      text-align:center;
+      padding:18px;
+      box-shadow:0 20px 32px rgba(0,0,0,0.24)
     }
 
     .book-empty{
@@ -788,6 +842,48 @@
         bottom:16px;
         right:16px
       }
+      .notes-grid{
+        grid-template-columns:1fr;
+      }
+      .note-card{
+        min-height:120px;
+      }
+      .book-shell{
+        flex-direction:column;
+      }
+      .book-nav{
+        flex-direction:row;
+      }
+      .book-nav button{
+        width:48px;
+        height:48px;
+      }
+      .book-spread{
+        grid-template-columns:1fr;
+      }
+      .book-spread::before,
+      #bookRightPage{
+        display:none;
+      }
+      .book-container{
+        min-height:420px;
+        padding:14px;
+      }
+      .book-cover-screen{
+        min-height:360px;
+      }
+    }
+
+    @media (min-width:601px) and (max-width:1024px){
+      .book-container{
+        min-height:460px;
+      }
+      .book-leaf{
+        padding:18px 20px;
+      }
+      .book-content{
+        max-height:280px;
+      }
     }
   </style>
 </head>
@@ -829,7 +925,7 @@
       <div class="notes-grid" id="notesGrid"></div>
     </section>
 
-    <section id="view-cuadernos" style="display:none">
+    <section id="view-cuadernos" class="notebook-shell" style="display:none">
       <h1 class="section">Mis cuadernos</h1>
       <div class="notebooks" id="notebooksList">
         <div class="notebook">
@@ -847,7 +943,7 @@
         </div>
         <div class="notebook-mode-panel">
           <h4>Modo libreta</h4>
-          <p>Abre este cuaderno en vista de doble hoja. Cada nota se muestra en una sola hoja (izquierda o derecha).</p>
+          <p>Empieza con la portada elegida y luego abre las hojas del cuaderno con animación de cambio de página.</p>
           <button id="openBookModeInline" class="btn">Abrir modo libreta</button>
         </div>
         <div class="notebook-notes" id="notebookNotesGrid"></div>
@@ -994,17 +1090,24 @@
         <div class="book-nav">
           <button id="prevPageBtn" title="Página anterior">⬅️</button>
         </div>
-        <div class="book-container">
-          <div class="book-spread" id="bookSpread">
-            <div class="book-leaf" id="bookLeftPage">
-              <div class="book-meta" id="bookLeftMeta"></div>
-              <div class="book-title" id="bookLeftTitle"></div>
-              <div class="book-content" id="bookLeftContent"></div>
+        <div class="book-stage">
+          <div class="book-container">
+            <div class="book-cover-screen" id="bookCoverScreen">
+              <img id="bookCoverImage" src="" alt="Portada del cuaderno" style="display:none">
+              <div id="bookCoverFallback" class="book-cover-fallback"></div>
+              <button id="openNotebookPages" class="btn">Abrir cuaderno</button>
             </div>
-            <div class="book-leaf" id="bookRightPage">
-              <div class="book-meta" id="bookRightMeta"></div>
-              <div class="book-title" id="bookRightTitle"></div>
-              <div class="book-content" id="bookRightContent"></div>
+            <div class="book-spread" id="bookSpread" style="display:none">
+              <div class="book-leaf" id="bookLeftPage">
+                <div class="book-meta" id="bookLeftMeta"></div>
+                <div class="book-title" id="bookLeftTitle"></div>
+                <div class="book-content" id="bookLeftContent"></div>
+              </div>
+              <div class="book-leaf" id="bookRightPage">
+                <div class="book-meta" id="bookRightMeta"></div>
+                <div class="book-title" id="bookRightTitle"></div>
+                <div class="book-content" id="bookRightContent"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -1124,7 +1227,7 @@
         editBtn.addEventListener('click', e=>{ e.stopPropagation(); openNotebookModal(nb); menu.style.display='none'; });
         renameBtn.addEventListener('click', e=>{ e.stopPropagation(); openNotebookModal(nb, {renameOnly:true}); menu.style.display='none'; });
         delBtn.addEventListener('click', e=>{ e.stopPropagation(); if(confirm('¿Eliminar cuaderno y sus notas?')) deleteNotebook(nb.id); menu.style.display='none'; });
-        img.addEventListener('click', ()=>{ openNotebookView(nb.id); });
+        img.addEventListener('click', ()=>{ openNotebookView(nb.id); showView('cuadernos'); });
 
         container.appendChild(el);
       });
@@ -1169,12 +1272,15 @@
 
     let activeNotebookId = null;
     let bookPageIndex = 0;
+    let isBookOpen = false;
 
     function openNotebookView(notebookId){
       activeNotebookId = notebookId;
       const nb = state.notebooks.find(n=>n.id===notebookId);
+      const notebookSection = qs('#view-cuadernos');
+      notebookSection.classList.add('exclusive-mode');
       qs('#notebookViewTitle').textContent = nb ? `Página del cuaderno: ${nb.name}` : 'Página del cuaderno';
-      qs('#notebookViewSubtitle').textContent = nb ? `Notas recientes del cuaderno ${nb.name}.` : 'Aquí verás las notas recientes de este cuaderno.';
+      qs('#notebookViewSubtitle').textContent = nb ? `Sección exclusiva para las notas guardadas en ${nb.name}.` : 'Aquí verás las notas recientes de este cuaderno.';
       const grid = qs('#notebookNotesGrid');
       const workspace = qs('#notebookWorkspace');
       workspace.style.display = 'block';
@@ -1206,6 +1312,7 @@
 
     function closeNotebookView(){
       qs('#notebookWorkspace').style.display='none';
+      qs('#view-cuadernos').classList.remove('exclusive-mode');
       activeNotebookId = null;
     }
 
@@ -1216,15 +1323,47 @@
       }
     }
 
+    function setBookCover(notebook){
+      const coverImg = qs('#bookCoverImage');
+      const coverFallback = qs('#bookCoverFallback');
+      coverImg.style.display = 'none';
+      if(notebook?.cover){
+        coverImg.src = notebook.cover;
+        coverImg.alt = `Portada de ${notebook.name}`;
+        coverImg.style.display = 'block';
+        coverFallback.style.display = 'none';
+      } else {
+        coverFallback.style.display = 'flex';
+        coverFallback.textContent = notebook?.name || 'Sin portada';
+      }
+    }
+
+    function showBookCover(){
+      isBookOpen = false;
+      qs('#bookCoverScreen').style.display = 'flex';
+      qs('#bookSpread').style.display = 'none';
+    }
+
+    function openNotebookPages(){
+      isBookOpen = true;
+      qs('#bookCoverScreen').style.display = 'none';
+      qs('#bookSpread').style.display = 'grid';
+      updateBookPage('forward');
+    }
+
     function openBookMode(){
       if(!activeNotebookId) return;
       bookPageIndex = 0;
-      updateBookPage('forward');
+      const nb = state.notebooks.find(n=>n.id===activeNotebookId);
+      qs('#bookModeTitle').textContent = nb ? `Modo Libreta: ${nb.name}` : 'Modo Libreta';
+      setBookCover(nb);
+      showBookCover();
       qs('#overlayBookMode').style.display='flex';
     }
 
     function closeBookMode(){
       qs('#overlayBookMode').style.display='none';
+      showBookCover();
     }
 
     function fillBookLeaf(side, note, displayIndex, total){
@@ -1281,16 +1420,17 @@
     qs('#openBookModeInline').addEventListener('click', openBookMode);
     qs('#exitBookMode').addEventListener('click', closeBookMode);
     qs('#backToNotebookView').addEventListener('click', closeBookMode);
+    qs('#openNotebookPages').addEventListener('click', openNotebookPages);
     qs('#tutorialClose').addEventListener('click', ()=>{ qs('#overlayTutorial').style.display='none'; localStorage.setItem(ONBOARDING_KEY, 'done'); });
     qs('#prevPageBtn').addEventListener('click', ()=>{
       const notes = getNotebookNotes(activeNotebookId);
-      if(notes.length === 0) return;
+      if(notes.length === 0 || !isBookOpen) return;
       bookPageIndex = Math.max(0, bookPageIndex - 2);
       updateBookPage('back');
     });
     qs('#nextPageBtn').addEventListener('click', ()=>{
       const notes = getNotebookNotes(activeNotebookId);
-      if(notes.length === 0) return;
+      if(notes.length === 0 || !isBookOpen) return;
       bookPageIndex = Math.min(Math.max(0, notes.length - 1), bookPageIndex + 2);
       if(bookPageIndex % 2 !== 0) bookPageIndex -= 1;
       updateBookPage('forward');
@@ -1399,7 +1539,11 @@
     function moveNoteToNotebook(noteId, nbId){ const note = state.notes.find(n=>n.id===noteId); if(note){ note.notebook=nbId; saveState(); renderNotes(); refreshNotebookWorkspace(); } }
 
     // --- Views ---
-    function showView(view){ qs('#view-notes').style.display=view==='notes'?'block':'none'; qs('#view-cuadernos').style.display=view==='cuadernos'?'block':'none'; }
+    function showView(view){
+      qs('#view-notes').style.display=view==='notes'?'block':'none';
+      qs('#view-cuadernos').style.display=view==='cuadernos'?'block':'none';
+      if(view !== 'cuadernos') closeNotebookView();
+    }
     qsa('.nav-links a').forEach(a=>a.addEventListener('click', e=>{ e.preventDefault(); showView(a.dataset.view); }));
 
     // --- FAB and quick add binding ---
