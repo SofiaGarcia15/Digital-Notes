@@ -187,10 +187,14 @@
     }
 
     .note-thumb.small{
-      width:min(96px, 42%);
-      height:78px;
-      margin:8px 0 10px;
+      width:100%;
+      max-height:170px;
+      height:auto;
+      object-fit:contain;
+      background:rgba(255,255,255,0.55);
+      margin:10px 0;
       display:block;
+      padding:6px;
     }
 
     .note-meta{
@@ -540,6 +544,24 @@
       gap:8px;
     }
 
+    .notebook-mode-panel{
+      margin-top:18px;
+      padding:16px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background:linear-gradient(135deg, rgba(255,255,255,0.48), rgba(255,192,212,0.22));
+    }
+
+    .notebook-mode-panel h4{
+      margin:0 0 6px;
+      color:var(--heading)
+    }
+
+    .notebook-mode-panel p{
+      margin:0 0 12px;
+      color:var(--muted)
+    }
+
     .notebook-notes .note-card{
       min-height:220px;
       padding:18px;
@@ -574,43 +596,56 @@
     }
 
     .book-container{
-      width:min(780px, 92vw);
-      min-height:470px;
+      width:min(950px, 96vw);
+      min-height:500px;
       perspective:1200px;
-      position:relative
+      position:relative;
+      background:linear-gradient(160deg,#27315a,#1f2342);
+      border-radius:18px;
+      padding:28px 20px;
+      box-shadow:0 20px 42px rgba(0,0,0,0.35)
     }
 
-    .book-spine{
+    .book-spread{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:0;
+      min-height:440px;
+      border-radius:14px;
+      overflow:hidden;
+      box-shadow:0 16px 36px rgba(0,0,0,0.26);
+      position:relative;
+      transition:transform 0.65s ease
+    }
+
+    .book-spread::before{
+      content:'';
       position:absolute;
-      top:8px;
-      bottom:8px;
+      top:0;
+      bottom:0;
       left:50%;
+      width:10px;
       transform:translateX(-50%);
-      width:8px;
-      border-radius:20px;
-      background:linear-gradient(180deg,#b7a48f,#8b7763);
-      box-shadow:0 0 12px rgba(0,0,0,0.22);
-      z-index:4
+      border-radius:12px;
+      background:linear-gradient(180deg,#b8a189,#8d745f);
+      box-shadow:0 0 12px rgba(0,0,0,0.2);
+      z-index:3;
     }
 
-    .book-page{
-      width:100%;
-      min-height:470px;
+    .book-leaf{
       background:#f6ecd2;
-      border-radius:6px;
-      padding:28px 34px;
-      box-shadow:0 16px 36px rgba(0,0,0,0.2);
-      transform-style:preserve-3d;
-      transition:transform 0.7s ease, box-shadow 0.7s ease;
-      position:relative
+      padding:24px 28px;
+      position:relative;
+      overflow:hidden
     }
 
-    .book-page::before{
+    .book-leaf::before{
       content:'';
       position:absolute;
       inset:0;
       background:
         linear-gradient(90deg,rgba(0,0,0,0.06),transparent 60%),
+        radial-gradient(circle at top right, rgba(255,182,204,0.35), transparent 55%),
         repeating-linear-gradient(
           to bottom,
           rgba(153,123,89,0.24),
@@ -622,17 +657,15 @@
       pointer-events:none
     }
 
-    .book-page.flip-forward{
-      transform-origin:left center;
-      transform:perspective(1200px) rotateY(-28deg) translateX(16px)
+    .book-spread.flip-forward{
+      transform:rotateY(-8deg) translateX(8px)
     }
 
-    .book-page.flip-back{
-      transform-origin:right center;
-      transform:perspective(1200px) rotateY(28deg) translateX(-16px)
+    .book-spread.flip-back{
+      transform:rotateY(8deg) translateX(-8px)
     }
 
-    .book-page.turning{
+    .book-spread.turning{
       box-shadow:0 22px 46px rgba(0,0,0,0.3)
     }
 
@@ -658,6 +691,11 @@
       min-height:300px;
       position:relative;
       z-index:2
+    }
+
+    .book-empty{
+      color:#9a8a76;
+      font-style:italic
     }
 
     .book-nav{
@@ -802,10 +840,15 @@
       <div id="notebookWorkspace" class="notebook-workspace" style="display:none">
         <div class="notebook-workspace-header">
           <div class="notebook-workspace-title-wrap">
-            <button id="openBookModeInline" class="btn">Modo Libreta</button>
-            <h3 id="notebookViewTitle" style="margin:0">Notas del cuaderno</h3>
+            <h3 id="notebookViewTitle" style="margin:0">Página del cuaderno</h3>
+            <p id="notebookViewSubtitle" style="margin:0;color:var(--muted)">Aquí verás las notas recientes de este cuaderno.</p>
           </div>
           <button id="closeNotebookView" class="btn" style="background:#ddd">Cerrar</button>
+        </div>
+        <div class="notebook-mode-panel">
+          <h4>Modo libreta</h4>
+          <p>Abre este cuaderno en vista de doble hoja. Cada nota se muestra en una sola hoja (izquierda o derecha).</p>
+          <button id="openBookModeInline" class="btn">Abrir modo libreta</button>
         </div>
         <div class="notebook-notes" id="notebookNotesGrid"></div>
       </div>
@@ -952,11 +995,17 @@
           <button id="prevPageBtn" title="Página anterior">⬅️</button>
         </div>
         <div class="book-container">
-          <div class="book-spine"></div>
-          <div class="book-page" id="bookPage">
-            <div class="book-meta" id="bookPageMeta"></div>
-            <div class="book-title" id="bookPageTitle"></div>
-            <div class="book-content" id="bookPageContent"></div>
+          <div class="book-spread" id="bookSpread">
+            <div class="book-leaf" id="bookLeftPage">
+              <div class="book-meta" id="bookLeftMeta"></div>
+              <div class="book-title" id="bookLeftTitle"></div>
+              <div class="book-content" id="bookLeftContent"></div>
+            </div>
+            <div class="book-leaf" id="bookRightPage">
+              <div class="book-meta" id="bookRightMeta"></div>
+              <div class="book-title" id="bookRightTitle"></div>
+              <div class="book-content" id="bookRightContent"></div>
+            </div>
           </div>
         </div>
         <div class="book-nav">
@@ -1124,7 +1173,8 @@
     function openNotebookView(notebookId){
       activeNotebookId = notebookId;
       const nb = state.notebooks.find(n=>n.id===notebookId);
-      qs('#notebookViewTitle').textContent = nb ? `Notas del cuaderno: ${nb.name}` : 'Notas del cuaderno';
+      qs('#notebookViewTitle').textContent = nb ? `Página del cuaderno: ${nb.name}` : 'Página del cuaderno';
+      qs('#notebookViewSubtitle').textContent = nb ? `Notas recientes del cuaderno ${nb.name}.` : 'Aquí verás las notas recientes de este cuaderno.';
       const grid = qs('#notebookNotesGrid');
       const workspace = qs('#notebookWorkspace');
       workspace.style.display = 'block';
@@ -1177,30 +1227,48 @@
       qs('#overlayBookMode').style.display='none';
     }
 
-    function updateBookPage(direction='forward'){
-      const notes = getNotebookNotes(activeNotebookId);
-      const page = qs('#bookPage');
-      if(notes.length === 0){
-        qs('#bookModeTitle').textContent = 'Modo Libreta';
-        qs('#bookPageTitle').textContent = 'Sin notas';
-        qs('#bookPageContent').textContent = 'Agrega una nota para empezar tu libreta.';
-        qs('#bookPageMeta').textContent = '';
+    function fillBookLeaf(side, note, displayIndex, total){
+      const title = qs(`#book${side}Title`);
+      const content = qs(`#book${side}Content`);
+      const meta = qs(`#book${side}Meta`);
+      const page = qs(`#book${side}Page`);
+      if(!note){
+        title.textContent = 'Hoja disponible';
+        content.innerHTML = '<p class="book-empty">Esta hoja está libre para tu próxima nota.</p>';
+        meta.textContent = '';
         page.style.background = '#f6ecd2';
         page.style.color = '';
         return;
       }
-      const note = notes[bookPageIndex];
-      const nb = state.notebooks.find(n=>n.id===activeNotebookId);
-      qs('#bookModeTitle').textContent = nb ? `Modo Libreta: ${nb.name}` : 'Modo Libreta';
-      qs('#bookPageTitle').textContent = note.title || 'Sin título';
-      qs('#bookPageContent').innerHTML = note.content || '';
-      qs('#bookPageMeta').textContent = `Hoja ${bookPageIndex + 1} de ${notes.length} · ${new Date(note.updated).toLocaleDateString()}`;
+      title.textContent = note.title || 'Sin título';
+      content.innerHTML = note.content || '<p class="book-empty">Sin contenido.</p>';
+      meta.textContent = `Hoja ${displayIndex} de ${total} · ${new Date(note.updated).toLocaleDateString()}`;
       page.style.background = note.bgColor || '#f6ecd2';
       page.style.color = note.textColor || '';
-      page.classList.remove('flip-forward','flip-back','turning');
+    }
+
+    function updateBookPage(direction='forward'){
+      const notes = getNotebookNotes(activeNotebookId);
+      const spread = qs('#bookSpread');
+      const nb = state.notebooks.find(n=>n.id===activeNotebookId);
+      qs('#bookModeTitle').textContent = nb ? `Modo Libreta: ${nb.name}` : 'Modo Libreta';
+      if(notes.length === 0){
+        fillBookLeaf('Left', null, 0, 0);
+        fillBookLeaf('Right', null, 0, 0);
+        qs('#bookLeftTitle').textContent = 'Sin notas';
+        qs('#bookLeftContent').innerHTML = '<p class="book-empty">Agrega una nota para empezar tu libreta.</p>';
+        qs('#bookRightTitle').textContent = 'Libreta lista';
+        qs('#bookRightContent').innerHTML = '<p class="book-empty">Cada nota ocupará solo una hoja.</p>';
+        return;
+      }
+      const leftIndex = bookPageIndex;
+      const rightIndex = bookPageIndex + 1;
+      fillBookLeaf('Left', notes[leftIndex], leftIndex + 1, notes.length);
+      fillBookLeaf('Right', notes[rightIndex], rightIndex + 1, notes.length);
+      spread.classList.remove('flip-forward','flip-back','turning');
       requestAnimationFrame(()=>{
-        page.classList.add('turning', direction === 'back' ? 'flip-back' : 'flip-forward');
-        setTimeout(()=>page.classList.remove('flip-forward','flip-back','turning'), 700);
+        spread.classList.add('turning', direction === 'back' ? 'flip-back' : 'flip-forward');
+        setTimeout(()=>spread.classList.remove('flip-forward','flip-back','turning'), 700);
       });
     }
 
@@ -1217,13 +1285,14 @@
     qs('#prevPageBtn').addEventListener('click', ()=>{
       const notes = getNotebookNotes(activeNotebookId);
       if(notes.length === 0) return;
-      bookPageIndex = Math.max(0, bookPageIndex - 1);
+      bookPageIndex = Math.max(0, bookPageIndex - 2);
       updateBookPage('back');
     });
     qs('#nextPageBtn').addEventListener('click', ()=>{
       const notes = getNotebookNotes(activeNotebookId);
       if(notes.length === 0) return;
-      bookPageIndex = Math.min(notes.length - 1, bookPageIndex + 1);
+      bookPageIndex = Math.min(Math.max(0, notes.length - 1), bookPageIndex + 2);
+      if(bookPageIndex % 2 !== 0) bookPageIndex -= 1;
       updateBookPage('forward');
     });
 
