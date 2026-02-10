@@ -168,15 +168,6 @@
       color:inherit
     }
 
-    .note-body.preview{
-      display:-webkit-box;
-      -webkit-line-clamp:3;
-      -webkit-box-orient:vertical;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      word-break:break-word;
-    }
-
     .note-meta{
       font-size:12px;
       color:var(--muted)
@@ -494,87 +485,6 @@
       color:var(--panel-text)
     }
 
-    .notebook-notes{
-      display:grid;
-      grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
-      gap:12px;
-      margin-top:12px
-    }
-
-    .book-shell{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:16px;
-      flex-wrap:wrap
-    }
-
-    .book-container{
-      width:min(640px, 90vw);
-      min-height:360px;
-      perspective:1200px;
-      position:relative
-    }
-
-    .book-page{
-      width:100%;
-      min-height:360px;
-      background:linear-gradient(135deg,#fff9f4,#fff0f5);
-      border-radius:16px;
-      padding:24px;
-      box-shadow:0 12px 30px rgba(0,0,0,0.18);
-      transform-style:preserve-3d;
-      transition:transform 0.5s ease;
-      position:relative
-    }
-
-    .book-page.flip-forward{
-      transform:rotateY(-10deg)
-    }
-
-    .book-page.flip-back{
-      transform:rotateY(10deg)
-    }
-
-    .book-meta{
-      font-size:12px;
-      color:var(--muted);
-      margin-bottom:10px
-    }
-
-    .book-title{
-      font-weight:700;
-      font-size:20px;
-      margin-bottom:12px
-    }
-
-    .book-content{
-      white-space:pre-wrap;
-      line-height:1.6
-    }
-
-    .book-nav{
-      display:flex;
-      flex-direction:column;
-      gap:10px
-    }
-
-    .book-nav button{
-      width:56px;
-      height:56px;
-      border-radius:50%;
-      border:none;
-      background:linear-gradient(180deg,#ffd0e6,#ffb6cc);
-      font-size:20px;
-      cursor:pointer;
-      box-shadow:0 6px 16px rgba(195,107,133,0.2)
-    }
-
-    .book-exit{
-      margin-top:14px;
-      background:#ddd
-    }
-
     .modal select{
       padding:6px 8px;
       border-radius:8px;
@@ -812,41 +722,6 @@
     </div>
   </div>
 
-  <!-- Overlay para ver notas de un cuaderno -->
-  <div class="overlay" id="overlayNotebookView">
-    <div class="modal">
-      <h3 id="notebookViewTitle">Notas del cuaderno</h3>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-        <button id="openBookMode" class="btn">Modo Libreta</button>
-        <button id="closeNotebookView" class="btn" style="background:#ddd">Cerrar</button>
-      </div>
-      <div class="notebook-notes" id="notebookNotesGrid"></div>
-    </div>
-  </div>
-
-  <!-- Overlay para modo libreta -->
-  <div class="overlay" id="overlayBookMode">
-    <div class="modal" style="max-width:900px">
-      <h3 id="bookModeTitle">Modo Libreta</h3>
-      <div class="book-shell">
-        <div class="book-nav">
-          <button id="prevPageBtn" title="Página anterior">⬅️</button>
-        </div>
-        <div class="book-container">
-          <div class="book-page" id="bookPage">
-            <div class="book-meta" id="bookPageMeta"></div>
-            <div class="book-title" id="bookPageTitle"></div>
-            <div class="book-content" id="bookPageContent"></div>
-          </div>
-        </div>
-        <div class="book-nav">
-          <button id="nextPageBtn" title="Página siguiente">➡️</button>
-        </div>
-      </div>
-      <button id="exitBookMode" class="btn book-exit">Salir del modo libreta</button>
-    </div>
-  </div>
-
   <div class="icon-btn" id="fab" title="Agregar nota">
     <img src="logodn.index.png" alt="Digital Notes" style="width:36px;height:36px;object-fit:contain;border-radius:8px">
   </div>
@@ -885,7 +760,6 @@
       if(raw){ try { state = JSON.parse(raw); } catch(e){ state = {notebooks:[],notes:[], darkMode:false}; } }
       if(!state.notebooks || state.notebooks.length===0){ state.notebooks = [{id:uid(),name:'General',cover:null}]; saveState(); }
       if(!state.notes) state.notes = [];
-      state.notes = state.notes.map(note=>({created: note.created || note.updated || Date.now(), ...note}));
       if(state.darkMode) document.body.setAttribute('data-theme','dark');
     }
     function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
@@ -931,7 +805,7 @@
         editBtn.addEventListener('click', e=>{ e.stopPropagation(); openNotebookModal(nb); menu.style.display='none'; });
         renameBtn.addEventListener('click', e=>{ e.stopPropagation(); openNotebookModal(nb, {renameOnly:true}); menu.style.display='none'; });
         delBtn.addEventListener('click', e=>{ e.stopPropagation(); if(confirm('¿Eliminar cuaderno y sus notas?')) deleteNotebook(nb.id); menu.style.display='none'; });
-        img.addEventListener('click', ()=>{ openNotebookView(nb.id); });
+        img.addEventListener('click', ()=>{ qs('#filterNotebook').value = nb.id; renderNotes(); showView('notes'); });
 
         container.appendChild(el);
       });
@@ -955,7 +829,7 @@
         const card = document.createElement('div'); card.className='note-card'; card.draggable=true;
         card.dataset.id=n.id;
         const title = document.createElement('div'); title.className='note-title'; title.textContent=truncate(n.title,35);
-        const body = document.createElement('div'); body.className='note-body preview'; body.textContent = truncate(stripHtml(n.content), 160);
+        const body = document.createElement('div'); body.className='note-body'; body.innerHTML = n.content;
         const meta = document.createElement('div'); meta.className='note-meta'; meta.textContent = new Date(n.updated).toLocaleString();
         card.appendChild(title); card.appendChild(body); card.appendChild(meta);
         if(n.bgColor) card.style.background=n.bgColor;
@@ -966,98 +840,11 @@
       });
     }
 
-    function getNotebookNotes(notebookId){
-      return state.notes.filter(n=>n.notebook===notebookId).sort((a,b)=>a.created - b.created);
-    }
-
-    let activeNotebookId = null;
-    let bookPageIndex = 0;
-
-    function openNotebookView(notebookId){
-      activeNotebookId = notebookId;
-      const nb = state.notebooks.find(n=>n.id===notebookId);
-      qs('#notebookViewTitle').textContent = nb ? `Notas del cuaderno: ${nb.name}` : 'Notas del cuaderno';
-      const grid = qs('#notebookNotesGrid');
-      grid.innerHTML = '';
-      const notes = getNotebookNotes(notebookId);
-      if(notes.length === 0){
-        const empty = document.createElement('div');
-        empty.textContent = 'Este cuaderno aún no tiene notas.';
-        grid.appendChild(empty);
-      } else {
-        notes.forEach(n=>{
-          const card = document.createElement('div');
-          card.className = 'note-card';
-          const title = document.createElement('div'); title.className='note-title'; title.textContent=truncate(n.title || 'Sin título', 40);
-          const body = document.createElement('div'); body.className='note-body preview'; body.textContent = truncate(stripHtml(n.content), 140);
-          const meta = document.createElement('div'); meta.className='note-meta'; meta.textContent = new Date(n.updated).toLocaleString();
-          card.appendChild(title); card.appendChild(body); card.appendChild(meta);
-          card.addEventListener('click', ()=>openEditor(n));
-          grid.appendChild(card);
-        });
-      }
-      qs('#overlayNotebookView').style.display='flex';
-    }
-
-    function closeNotebookView(){
-      qs('#overlayNotebookView').style.display='none';
-    }
-
-    function openBookMode(){
-      if(!activeNotebookId) return;
-      bookPageIndex = 0;
-      updateBookPage('forward');
-      qs('#overlayNotebookView').style.display='none';
-      qs('#overlayBookMode').style.display='flex';
-    }
-
-    function closeBookMode(){
-      qs('#overlayBookMode').style.display='none';
-    }
-
-    function updateBookPage(direction='forward'){
-      const notes = getNotebookNotes(activeNotebookId);
-      const page = qs('#bookPage');
-      if(notes.length === 0){
-        qs('#bookModeTitle').textContent = 'Modo Libreta';
-        qs('#bookPageTitle').textContent = 'Sin notas';
-        qs('#bookPageContent').textContent = 'Agrega una nota para empezar tu libreta.';
-        qs('#bookPageMeta').textContent = '';
-        return;
-      }
-      const note = notes[bookPageIndex];
-      const nb = state.notebooks.find(n=>n.id===activeNotebookId);
-      qs('#bookModeTitle').textContent = nb ? `Modo Libreta: ${nb.name}` : 'Modo Libreta';
-      qs('#bookPageTitle').textContent = note.title || 'Sin título';
-      qs('#bookPageContent').textContent = stripHtml(note.content);
-      qs('#bookPageMeta').textContent = `Página ${bookPageIndex + 1} de ${notes.length} · ${new Date(note.updated).toLocaleDateString()}`;
-      page.classList.remove('flip-forward','flip-back');
-      requestAnimationFrame(()=>{
-        page.classList.add(direction === 'back' ? 'flip-back' : 'flip-forward');
-        setTimeout(()=>page.classList.remove('flip-forward','flip-back'), 500);
-      });
-    }
-
     // --- Events and UI wiring ---
     qs('#filterNotebook').addEventListener('change', renderNotes);
     qs('#searchInput').addEventListener('input', renderNotes);
     qs('#closeEditor').addEventListener('click', ()=>closeEditor());
-    document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeEditor(); qs('#overlayNotebook').style.display='none'; closeNotebookView(); closeBookMode(); } });
-    qs('#closeNotebookView').addEventListener('click', closeNotebookView);
-    qs('#openBookMode').addEventListener('click', openBookMode);
-    qs('#exitBookMode').addEventListener('click', closeBookMode);
-    qs('#prevPageBtn').addEventListener('click', ()=>{
-      const notes = getNotebookNotes(activeNotebookId);
-      if(notes.length === 0) return;
-      bookPageIndex = Math.max(0, bookPageIndex - 1);
-      updateBookPage('back');
-    });
-    qs('#nextPageBtn').addEventListener('click', ()=>{
-      const notes = getNotebookNotes(activeNotebookId);
-      if(notes.length === 0) return;
-      bookPageIndex = Math.min(notes.length - 1, bookPageIndex + 1);
-      updateBookPage('forward');
-    });
+    document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeEditor(); qs('#overlayNotebook').style.display='none'; } });
 
     // --- Notes CRUD ---
     let editingNote=null;
@@ -1104,7 +891,7 @@
         editingNote.notebook=notebook;
         editingNote.updated=Date.now();
       } else {
-        const newNote = {id:uid(),title,content,notebook,updated:Date.now(), created:Date.now(), bgColor:null, textColor:null};
+        const newNote = {id:uid(),title,content,notebook,updated:Date.now(), bgColor:null, textColor:null};
         state.notes.push(newNote);
         editingNote = newNote;
       }
