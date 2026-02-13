@@ -141,6 +141,19 @@
       transform:translateY(-3px)
     }
 
+    .btn,
+    .toolbar button,
+    .notebook-open-mode-btn,
+    .book-nav button{
+      transition:transform .18s ease, box-shadow .18s ease, filter .18s ease;
+    }
+
+    .btn-press{
+      transform:scale(0.95) !important;
+      filter:brightness(0.95);
+      box-shadow:0 3px 10px rgba(195,107,133,0.2) !important;
+    }
+
     .notes-grid{
       display:grid;
       grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
@@ -188,13 +201,12 @@
 
     .note-thumb.small{
       width:100%;
-      max-height:170px;
-      height:auto;
-      object-fit:contain;
-      background:rgba(255,255,255,0.55);
+      height:96px;
+      object-fit:cover;
+      background:transparent;
       margin:10px 0;
       display:block;
-      padding:6px;
+      padding:0;
     }
 
     .note-meta{
@@ -511,6 +523,62 @@
       width:160px
     }
 
+    .draw-panel{
+      display:none;
+      margin-bottom:10px;
+      padding:12px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:var(--panel-bg);
+    }
+
+    .draw-canvas{
+      width:100%;
+      height:220px;
+      border:1px dashed var(--border);
+      border-radius:12px;
+      touch-action:none;
+      cursor:crosshair;
+      background:#fff;
+      margin-top:10px;
+    }
+
+    .template-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(86px,1fr));
+      gap:8px;
+      margin-top:8px;
+    }
+
+    .template-grid button{
+      border:2px solid transparent;
+      background:transparent;
+      padding:0;
+      border-radius:10px;
+      overflow:hidden;
+      cursor:pointer;
+    }
+
+    .template-grid img{
+      width:100%;
+      height:68px;
+      object-fit:cover;
+      display:block;
+    }
+
+    .calendar-btn{
+      background:linear-gradient(180deg,#ff9fc9,#ff70b0);
+      color:white;
+      border:none;
+      border-radius:22px;
+      padding:10px 14px;
+      font-weight:700;
+      box-shadow:0 10px 18px rgba(255,112,176,0.25);
+    }
+
+    .template-grid button.active{ border-color:#ff70b0; }
+
+
     .image-controls select,
     .image-controls button{
       padding:8px 10px;
@@ -706,14 +774,7 @@
       inset:0;
       background:
         linear-gradient(90deg,rgba(0,0,0,0.06),transparent 60%),
-        radial-gradient(circle at top right, rgba(255,126,188,0.24), transparent 55%),
-        repeating-linear-gradient(
-          to bottom,
-          rgba(175,105,147,0.24),
-          rgba(175,105,147,0.24) 1px,
-          transparent 1px,
-          transparent 24px
-        );
+        radial-gradient(circle at top right, rgba(255,126,188,0.24), transparent 55%);
       border-radius:6px;
       pointer-events:none
     }
@@ -934,6 +995,13 @@
       .logo-img{width:36px;height:36px}
       .logo-text{font-size:18px}
       .modal{padding:14px}
+      #overlayEditor{padding:0}
+      #overlayEditor .modal{
+        max-width:100% !important;
+        min-height:100vh;
+        border-radius:0;
+        padding:12px;
+      }
       .editor{min-height:220px}
       .toolbar button,
       .toolbar select,
@@ -972,8 +1040,9 @@
         display:none;
       }
       .book-container{
-        min-height:420px;
-        padding:14px;
+        width:100%;
+        min-height:80vh;
+        padding:10px;
       }
       .book-cover-screen{
         min-height:360px;
@@ -1016,6 +1085,8 @@
         <input type="file" id="importFile" class="file-input" accept="application/json">
       </label>
 
+      <button class="calendar-btn" id="calendarBtn">📅 Calendario</button>
+      <input type="date" id="calendarPicker" class="file-input">
       <button class="btn" id="darkModeBtn">🌙</button>
     </div>
   </header>
@@ -1065,6 +1136,7 @@
       <h3 id="nbModalTitle">Nuevo cuaderno</h3>
       <input id="nbName" placeholder="Nombre del cuaderno" class="title-input" />
       <label>Portada: <input type="file" id="nbCoverFile" accept="image/*"></label>
+      <label style="display:block;margin-top:10px">Color portada/fondo: <input type="color" id="nbColor" value="#f08aba"></label>
       <div style="display:flex;gap:10px;margin-top:12px;justify-content:flex-end">
         <button id="nbCancel" class="btn" style="background:#ddd">Cancelar</button>
         <button id="nbSave" class="btn">Guardar</button>
@@ -1097,6 +1169,8 @@
             <input type="color" id="textColorToolPicker" class="text-color-picker" value="#6b4350" title="Paleta de color de texto">
           </div>
           <div class="tool-group">
+            <button id="fontSizeDec" title="Disminuir letra">A-</button>
+            <button id="fontSizeInc" title="Aumentar letra">A+</button>
             <select id="fontSelect">
               <option value="">Fuente</option>
               <option value="Arial">Arial</option>
@@ -1125,7 +1199,9 @@
           <div class="tool-group">
             <input type="color" id="highlightColor" value="#fff2a8" title="Subrayado de color">
             <button id="applyHighlight">🖍️</button>
-            <button id="openColorPanel">🎨</button>
+            <button id="openColorPanel">🎨 Fondo</button>
+            <button id="openDrawPanel">✍️ Dibujo</button>
+            <button id="openTemplatePanel">🧩 Plantilla</button>
           </div>
           <div class="tool-group">
             <button id="insertImageBtn">🖼️</button>
@@ -1157,6 +1233,27 @@
             <div class="palette" id="quickPalette"></div>
           </div>
         </div>
+      </div>
+
+      <div id="drawPanel" class="draw-panel">
+        <div class="toolbar">
+          <input type="color" id="drawColor" value="#c36b85" title="Color">
+          <label>Trazo <input type="range" id="drawSize" min="1" max="30" value="4"></label>
+          <select id="brushType">
+            <option value="round">Pincel redondo</option>
+            <option value="square">Pincel cuadrado</option>
+            <option value="soft">Pincel suave</option>
+            <option value="eraser">Borrador</option>
+          </select>
+          <button id="clearDraw">Limpiar</button>
+          <button id="insertDrawToNote">Insertar dibujo</button>
+        </div>
+        <canvas id="drawCanvas" class="draw-canvas" width="1200" height="500"></canvas>
+      </div>
+
+      <div id="templatePanel" class="draw-panel">
+        <strong>Plantillas</strong>
+        <div id="templateGrid" class="template-grid"></div>
       </div>
 
       <div class="image-controls" id="imageControls">
@@ -1289,7 +1386,8 @@
       if(raw){ try { state = JSON.parse(raw); } catch(e){ state = {notebooks:[],notes:[], darkMode:false}; } }
       if(!state.notebooks || state.notebooks.length===0){ state.notebooks = [{id:uid(),name:'General',cover:null}]; saveState(); }
       if(!state.notes) state.notes = [];
-      state.notes = state.notes.map(note=>({created: note.created || note.updated || Date.now(), ...note}));
+      state.notebooks = state.notebooks.map(nb=>({color:'#f08aba', ...nb}));
+      state.notes = state.notes.map(note=>({created: note.created || note.updated || Date.now(), fontSize: note.fontSize || 16, ...note}));
       if(state.darkMode) document.body.setAttribute('data-theme','dark');
     }
     function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
@@ -1302,6 +1400,22 @@
       saveState();
     }
     qs('#darkModeBtn').onclick = toggleDarkMode;
+
+    document.addEventListener('click', (e)=>{
+      if(e.target.matches('button, .btn, .calendar-btn, .notebook-open-mode-btn')){
+        e.target.classList.add('btn-press');
+        setTimeout(()=>e.target.classList.remove('btn-press'), 150);
+      }
+    });
+
+    qs('#calendarBtn').addEventListener('click', ()=>qs('#calendarPicker').click());
+    qs('#calendarPicker').addEventListener('change', (e)=>{
+      if(!e.target.value) return;
+      if(qs('#overlayEditor').style.display !== 'flex') openEditor(editingNote || null);
+      insertHtmlAtCursor(`<p>📅 ${e.target.value}</p>`);
+      saveCurrentNote({closeEditor:false});
+      e.target.value = '';
+    });
 
     // --- Render Notebooks ---
     function renderNotebooks(){
@@ -1483,6 +1597,9 @@
       bookPageIndex = 0;
       const nb = state.notebooks.find(n=>n.id===activeNotebookId);
       qs('#bookModeTitle').textContent = nb ? `Modo Libreta: ${nb.name}` : 'Modo Libreta';
+      qs('#bookCoverScreen').style.background = nb?.color || '#f08aba';
+      qs('#bookSpread').style.background = nb?.color || '#f08aba';
+      qs('#bookSpread').style.borderRadius = '14px';
       setBookCover(nb);
       showBookCover();
       qs('#overlayBookMode').style.display='flex';
@@ -1582,18 +1699,25 @@
         qs('#editor').style.background = note.bgColor || '';
         qs('#editor').style.color = note.textColor || '';
         if(note.textColor) qs('#textColorToolPicker').value = note.textColor;
+        qs('#editor').style.fontSize = `${note.fontSize || 16}px`;
       } else {
         qs('#colorPreview').style.background = '';
         qs('#editor').style.background = '';
         qs('#editor').style.color = '';
+        qs('#editor').style.fontSize = '16px';
       }
+      qsa('#editor img').forEach(makeImageMovable);
     }
     function closeEditor(){
       qs('#overlayEditor').style.display='none';
       editingNote=null;
     }
 
-    qs('#saveNote').addEventListener('click', ()=>{ saveCurrentNote({closeEditor:true}); });
+    qs('#saveNote').addEventListener('click', ()=>{
+      const btn = qs('#saveNote');
+      btn.classList.add('btn-press');
+      setTimeout(()=>{ btn.classList.remove('btn-press'); saveCurrentNote({closeEditor:true}); }, 170);
+    });
     qs('#deleteNoteBtn').addEventListener('click', ()=>{
       if(editingNote && confirm('¿Eliminar nota?')){ state.notes = state.notes.filter(n=>n.id!==editingNote.id); saveState(); renderNotes(); refreshNotebookWorkspace(); closeEditor(); }
     });
@@ -1607,8 +1731,9 @@
         editingNote.content=content;
         editingNote.notebook=notebook;
         editingNote.updated=Date.now();
+        editingNote.fontSize=parseInt(qs('#editor').style.fontSize || '16', 10);
       } else {
-        const newNote = {id:uid(),title,content,notebook,updated:Date.now(), created:Date.now(), bgColor:null, textColor:null};
+        const newNote = {id:uid(),title,content,notebook,updated:Date.now(), created:Date.now(), bgColor:null, textColor:null, fontSize:parseInt(qs('#editor').style.fontSize || '16', 10)};
         state.notes.push(newNote);
         editingNote = newNote;
       }
@@ -1635,6 +1760,7 @@
       const coverInput = qs('#nbCoverFile');
       coverInput.value = '';
       coverInput.disabled = renameOnly;
+      qs('#nbColor').value = nb?.color || '#f08aba';
     }
     qs('#nbCancel').addEventListener('click', ()=>qs('#overlayNotebook').style.display='none');
     qs('#nbSave').addEventListener('click', async ()=>{
@@ -1642,9 +1768,10 @@
       if(editingNotebook){
         editingNotebook.name=name;
         if(!renameOnly && qs('#nbCoverFile').files[0]) editingNotebook.cover = await fileToDataUrl(qs('#nbCoverFile').files[0]);
+        editingNotebook.color = qs('#nbColor').value;
       } else {
         const cover = qs('#nbCoverFile').files[0]? await fileToDataUrl(qs('#nbCoverFile').files[0]):null;
-        state.notebooks.push({id:uid(),name,cover});
+        state.notebooks.push({id:uid(),name,cover,color:qs('#nbColor').value});
       }
       saveState(); renderNotebooks(); qs('#overlayNotebook').style.display='none';
     });
@@ -1712,7 +1839,7 @@
     });
 
     // Quick palette generation
-    const quickColors = ['#fffbe6','#ffdfe8','#ffe9c7','#e6f7ff','#e6ffe6','#f0e6ff','#fff0f0','#f7f0ff'];
+    const quickColors = ['#fff4f8','#ffe4ec','#ffd5e8','#ffd9cc','#ffe8b6','#d6f5ff','#dfffe8','#ece1ff','#f4f4f4','#2b2b2b'];
     function renderQuickPalette(){
       const container = qs('#quickPalette'); container.innerHTML='';
       quickColors.forEach(c=>{
@@ -1729,7 +1856,7 @@
       const f = e.target.files[0]; if(!f) return;
       const dataUrl = await fileToDataUrl(f);
       // insert at caret position in contenteditable
-      insertHtmlAtCursor(`<img src="${dataUrl}" class="note-img" style="width:70%;display:block;margin:8px 0" />`);
+      insertHtmlAtCursor(`<img src="${dataUrl}" class="note-img movable" style="width:45%;display:block;margin:8px 0;position:relative;left:0;top:0;cursor:move" />`);
       // autosave will pick up changes
       saveCurrentNote({closeEditor:false});
       e.target.value = '';
@@ -1777,6 +1904,18 @@
       });
     });
 
+    qs('#fontSizeInc').addEventListener('click', ()=>{
+      const current = parseInt(qs('#editor').style.fontSize || '16', 10);
+      qs('#editor').style.fontSize = `${Math.min(current + 2, 48)}px`;
+      saveCurrentNote({closeEditor:false});
+    });
+
+    qs('#fontSizeDec').addEventListener('click', ()=>{
+      const current = parseInt(qs('#editor').style.fontSize || '16', 10);
+      qs('#editor').style.fontSize = `${Math.max(current - 2, 10)}px`;
+      saveCurrentNote({closeEditor:false});
+    });
+
     qs('#fontSelect').addEventListener('change', (e)=>{
       if(!e.target.value) return;
       document.execCommand('fontName', false, e.target.value);
@@ -1802,6 +1941,72 @@
       saveCurrentNote({closeEditor:false});
     });
 
+    qs('#openDrawPanel').addEventListener('click', ()=>{
+      const panel = qs('#drawPanel');
+      panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+    });
+
+    qs('#openTemplatePanel').addEventListener('click', ()=>{
+      const panel = qs('#templatePanel');
+      panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+    });
+
+    const templateFiles = ['plantilla1.png','plantilla2.png','plantilla3.png','plantilla4.png','plantilla5.png'];
+    const templateGrid = qs('#templateGrid');
+    templateFiles.forEach(file=>{
+      const btn=document.createElement('button');
+      btn.innerHTML = `<img src="${file}" alt="${file}">`;
+      btn.addEventListener('click', ()=>{
+        qsa('#templateGrid button').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        insertHtmlAtCursor(`<img src="${file}" class="note-img" style="width:100%;border-radius:8px;margin:8px 0">`);
+        saveCurrentNote({closeEditor:false});
+      });
+      templateGrid.appendChild(btn);
+    });
+
+    const drawCanvas = qs('#drawCanvas');
+    const drawCtx = drawCanvas.getContext('2d');
+    drawCtx.fillStyle = '#ffffff';
+    drawCtx.fillRect(0,0,drawCanvas.width,drawCanvas.height);
+    let drawing = false;
+    const getPoint = (ev)=>{
+      const rect = drawCanvas.getBoundingClientRect();
+      const src = ev.touches ? ev.touches[0] : ev;
+      return {x:(src.clientX-rect.left)*(drawCanvas.width/rect.width), y:(src.clientY-rect.top)*(drawCanvas.height/rect.height)};
+    };
+    function startDraw(ev){ drawing=true; paint(ev); }
+    function endDraw(){ drawing=false; drawCtx.beginPath(); }
+    function paint(ev){
+      if(!drawing) return;
+      ev.preventDefault();
+      const p=getPoint(ev);
+      const brush = qs('#brushType').value;
+      drawCtx.lineWidth = parseInt(qs('#drawSize').value,10);
+      drawCtx.lineCap = brush === 'square' ? 'butt' : 'round';
+      drawCtx.strokeStyle = brush === 'eraser' ? '#ffffff' : qs('#drawColor').value;
+      drawCtx.globalAlpha = brush === 'soft' ? 0.35 : 1;
+      drawCtx.lineTo(p.x,p.y);
+      drawCtx.stroke();
+      drawCtx.beginPath();
+      drawCtx.moveTo(p.x,p.y);
+    }
+    ['mousedown','touchstart'].forEach(evt=>drawCanvas.addEventListener(evt,startDraw));
+    ['mouseup','mouseleave','touchend'].forEach(evt=>drawCanvas.addEventListener(evt,endDraw));
+    ['mousemove','touchmove'].forEach(evt=>drawCanvas.addEventListener(evt,paint,{passive:false}));
+
+    qs('#clearDraw').addEventListener('click', ()=>{
+      drawCtx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
+      drawCtx.fillStyle='#ffffff';
+      drawCtx.fillRect(0,0,drawCanvas.width,drawCanvas.height);
+    });
+
+    qs('#insertDrawToNote').addEventListener('click', ()=>{
+      const data = drawCanvas.toDataURL('image/png');
+      insertHtmlAtCursor(`<img src="${data}" class="note-img" style="width:100%;border-radius:10px;margin:8px 0">`);
+      saveCurrentNote({closeEditor:false});
+    });
+
     // --- Image controls ---
     const imageControls = qs('#imageControls');
     const imageSize = qs('#imageSize');
@@ -1819,6 +2024,7 @@
         imageRotate.value = rotateMatch ? rotateMatch[1] : 0;
         const alignValue = target.dataset.align || 'left';
         imageAlign.value = alignValue;
+        makeImageMovable(target);
       } else {
         currentImage = null;
         imageControls.style.display = 'none';
@@ -1856,6 +2062,34 @@
     qs('#scrollDownBtn').addEventListener('click', ()=>{
       qs('#editor').scrollBy({top:240, behavior:'smooth'});
     });
+
+    function makeImageMovable(img){
+      img.style.cursor = 'move';
+      img.addEventListener('pointerdown', (ev)=>{
+        if(ev.target !== img) return;
+        img.setPointerCapture(ev.pointerId);
+        const startX = ev.clientX;
+        const startY = ev.clientY;
+        const originLeft = parseFloat(img.dataset.left || img.style.left || 0);
+        const originTop = parseFloat(img.dataset.top || img.style.top || 0);
+        const onMove = (mv)=>{
+          const dx = mv.clientX - startX;
+          const dy = mv.clientY - startY;
+          img.style.position = 'relative';
+          img.style.left = `${originLeft + dx}px`;
+          img.style.top = `${originTop + dy}px`;
+        };
+        const onUp = ()=>{
+          img.dataset.left = parseFloat(img.style.left || 0);
+          img.dataset.top = parseFloat(img.style.top || 0);
+          img.removeEventListener('pointermove', onMove);
+          img.removeEventListener('pointerup', onUp);
+          saveCurrentNote({closeEditor:false});
+        };
+        img.addEventListener('pointermove', onMove);
+        img.addEventListener('pointerup', onUp);
+      });
+    }
 
     function applyImageAlign(value){
       if(!currentImage) return;
