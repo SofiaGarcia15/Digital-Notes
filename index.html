@@ -134,11 +134,27 @@
       color:#5a3d4b;
       font-weight:700;
       box-shadow:0 6px 18px rgba(195,107,133,0.12);
-      transition:transform .15s ease
+      transition:transform .15s ease, box-shadow .2s ease
     }
 
     .btn:hover{
       transform:translateY(-3px)
+    }
+
+    .btn:active,
+    .toolbar button:active,
+    .icon-btn:active{
+      transform:scale(0.95);
+    }
+
+    .tap-anim{
+      animation:tapPop 320ms ease;
+    }
+
+    @keyframes tapPop{
+      0%{ transform:scale(1); }
+      45%{ transform:scale(0.92); }
+      100%{ transform:scale(1); }
     }
 
     .notes-grid{
@@ -188,13 +204,12 @@
 
     .note-thumb.small{
       width:100%;
-      max-height:170px;
-      height:auto;
-      object-fit:contain;
-      background:rgba(255,255,255,0.55);
+      height:90px;
+      object-fit:cover;
       margin:10px 0;
       display:block;
-      padding:6px;
+      padding:0;
+      background:transparent;
     }
 
     .note-meta{
@@ -381,6 +396,7 @@
 
     .editor{
       min-height:300px;
+      position:relative;
       max-height:min(60vh, 420px);
       border-radius:10px;
       border:1px solid var(--border);
@@ -485,7 +501,109 @@
     .note-img{
       max-width:100%;
       border-radius:8px;
-      margin-top:8px
+      margin-top:8px;
+      cursor:move;
+      touch-action:none;
+    }
+
+    .note-img.selected{
+      outline:2px dashed #d66ba0;
+      outline-offset:2px;
+    }
+
+    .drawing-board{
+      display:none;
+      margin-bottom:12px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:10px;
+      background:var(--panel-bg);
+    }
+
+    .draw-toolbar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+      margin-bottom:8px;
+    }
+
+    .draw-toolbar input,
+    .draw-toolbar select,
+    .draw-toolbar button{
+      border-radius:10px;
+      border:1px solid var(--border);
+      padding:8px;
+      background:var(--panel-bg);
+      color:var(--panel-text);
+    }
+
+    #drawCanvas{
+      width:100%;
+      height:220px;
+      border:1px solid var(--border);
+      border-radius:10px;
+      background:#fff;
+      display:block;
+      cursor:crosshair;
+      touch-action:none;
+    }
+
+    .calendar-btn{
+      background:linear-gradient(180deg,#ffc2dd,#ff9fca);
+      color:#6a2546;
+      border:1px solid rgba(255,255,255,0.65);
+    }
+
+
+    .btn.saving{
+      background:linear-gradient(180deg,#ffb9d6,#ffa6cc);
+      box-shadow:0 10px 24px rgba(194,72,126,0.28);
+    }
+
+    .btn.saved{
+      background:linear-gradient(180deg,#b6f3d1,#93e3b8);
+      color:#1d5b3a;
+    }
+
+    .calendar-modal{
+      max-width:420px;
+    }
+
+    .calendar-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:10px;
+    }
+
+    .calendar-grid{
+      display:grid;
+      grid-template-columns:repeat(7,1fr);
+      gap:6px;
+    }
+
+    .calendar-weekday,
+    .calendar-day{
+      text-align:center;
+      border-radius:10px;
+      padding:8px 0;
+      font-weight:700;
+      font-size:12px;
+    }
+
+    .calendar-weekday{ color:var(--muted); }
+
+    .calendar-day{
+      border:1px solid var(--border);
+      background:linear-gradient(180deg,#fff8fd,#ffe9f4);
+      cursor:pointer;
+    }
+
+    .calendar-day.active{
+      background:linear-gradient(180deg,#ffb6d8,#fda7cc);
+      color:#6a2546;
+      border-color:#f192bf;
     }
 
     .image-controls{
@@ -706,14 +824,7 @@
       inset:0;
       background:
         linear-gradient(90deg,rgba(0,0,0,0.06),transparent 60%),
-        radial-gradient(circle at top right, rgba(255,126,188,0.24), transparent 55%),
-        repeating-linear-gradient(
-          to bottom,
-          rgba(175,105,147,0.24),
-          rgba(175,105,147,0.24) 1px,
-          transparent 1px,
-          transparent 24px
-        );
+        radial-gradient(circle at top right, rgba(255,126,188,0.24), transparent 55%);
       border-radius:6px;
       pointer-events:none
     }
@@ -954,6 +1065,17 @@
       .note-card{
         min-height:120px;
       }
+      #overlayEditor{
+        padding:0;
+        align-items:stretch;
+      }
+      #overlayEditor .modal{
+        max-width:none;
+        width:100%;
+        min-height:100vh;
+        border-radius:0;
+        padding:12px;
+      }
       .book-shell{
         flex-direction:column;
       }
@@ -972,12 +1094,16 @@
         display:none;
       }
       .book-container{
-        min-height:420px;
-        padding:14px;
+        min-height:460px;
+        padding:10px;
+        width:100%;
       }
       .book-cover-screen{
-        min-height:360px;
+        min-height:420px;
       }
+      .book-stage{ width:100%; }
+      .book-nav{ width:100%; justify-content:center; }
+      .book-content{ max-height:340px; }
     }
 
     @media (min-width:601px) and (max-width:1024px){
@@ -1010,6 +1136,7 @@
 
       <button class="btn" id="openQuickAdd">+ Agregar Nota</button>
       <button class="btn" id="exportBtn">Exportar</button>
+      <button class="btn calendar-btn" id="calendarBtn">📅 Calendario</button>
 
       <label class="btn" id="importLabel">
         Importar
@@ -1065,6 +1192,7 @@
       <h3 id="nbModalTitle">Nuevo cuaderno</h3>
       <input id="nbName" placeholder="Nombre del cuaderno" class="title-input" />
       <label>Portada: <input type="file" id="nbCoverFile" accept="image/*"></label>
+      <label>Color del cuaderno: <input type="color" id="nbCoverColor" value="#f08aba"></label>
       <div style="display:flex;gap:10px;margin-top:12px;justify-content:flex-end">
         <button id="nbCancel" class="btn" style="background:#ddd">Cancelar</button>
         <button id="nbSave" class="btn">Guardar</button>
@@ -1097,6 +1225,8 @@
             <input type="color" id="textColorToolPicker" class="text-color-picker" value="#6b4350" title="Paleta de color de texto">
           </div>
           <div class="tool-group">
+            <button id="fontDecrease" title="Disminuir tamaño">A-</button>
+            <button id="fontIncrease" title="Aumentar tamaño">A+</button>
             <select id="fontSelect">
               <option value="">Fuente</option>
               <option value="Arial">Arial</option>
@@ -1129,6 +1259,8 @@
           </div>
           <div class="tool-group">
             <button id="insertImageBtn">🖼️</button>
+            <button id="toggleDrawBoard">✏️ Dibujo</button>
+            <button id="insertTemplateBtn">📄 Plantilla</button>
             <input type="file" id="noteImageFile" accept="image/*" class="file-input">
           </div>
         </div>
@@ -1159,6 +1291,35 @@
         </div>
       </div>
 
+      <div class="drawing-board" id="drawingBoard">
+        <div class="draw-toolbar">
+          <label>Color <input type="color" id="drawColor" value="#d4629b"></label>
+          <label>Tamaño <input type="range" id="drawSize" min="1" max="25" value="4"></label>
+          <label>Pincel
+            <select id="drawBrush">
+              <option value="round">Redondo</option>
+              <option value="square">Cuadrado</option>
+              <option value="marker">Marcador</option>
+            </select>
+          </label>
+          <button id="drawEraser">Borrador</button>
+          <button id="clearDrawCanvas">Limpiar</button>
+          <button id="saveDrawingBtn" class="btn">Guardar dibujo</button>
+        </div>
+        <canvas id="drawCanvas" width="860" height="220"></canvas>
+      </div>
+
+      <div id="templatePanel" class="drawing-board">
+        <div class="draw-toolbar">
+          <span class="tool-label">Plantillas (solo nombre de foto)</span>
+          <button class="template-btn" data-template="plantilla1.png">Plantilla 1</button>
+          <button class="template-btn" data-template="plantilla2.png">Plantilla 2</button>
+          <button class="template-btn" data-template="plantilla3.png">Plantilla 3</button>
+          <button class="template-btn" data-template="plantilla4.png">Plantilla 4</button>
+          <button class="template-btn" data-template="plantilla5.png">Plantilla 5</button>
+        </div>
+      </div>
+
       <div class="image-controls" id="imageControls">
         <label>Tamaño
           <input type="range" id="imageSize" min="20" max="100" value="70">
@@ -1173,6 +1334,7 @@
             <option value="right">Derecha</option>
           </select>
         </label>
+        <button id="pinImageBtn">Fijar imagen</button>
         <button id="removeImageBtn">Eliminar imagen</button>
       </div>
 
@@ -1182,6 +1344,22 @@
           <button id="scrollUpBtn" title="Subir">⬆️</button>
           <button id="scrollDownBtn" title="Bajar">⬇️</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="overlay" id="overlayCalendar">
+    <div class="modal calendar-modal">
+      <div class="calendar-head">
+        <button id="calendarPrev" class="btn" style="padding:8px 10px">◀</button>
+        <h3 id="calendarTitle" style="margin:0">Calendario</h3>
+        <button id="calendarNext" class="btn" style="padding:8px 10px">▶</button>
+      </div>
+      <div class="calendar-grid" id="calendarGrid"></div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+        <button id="closeCalendar" class="btn" style="background:#ddd">Cerrar</button>
+        <button id="insertCalendarDate" class="btn">Insertar fecha</button>
       </div>
     </div>
   </div>
@@ -1199,7 +1377,7 @@
           <button id="prevPageBtn" title="Página anterior">⬅️</button>
         </div>
         <div class="book-stage">
-          <div class="book-container">
+          <div class="book-container" id="bookContainer">
             <div class="book-cover-screen" id="bookCoverScreen">
               <img id="bookCoverImage" src="" alt="Portada del cuaderno" style="display:none">
               <div id="bookCoverFallback" class="book-cover-fallback"></div>
@@ -1452,6 +1630,7 @@
         coverFallback.style.display = 'flex';
         coverFallback.textContent = notebook?.name || 'Sin portada';
       }
+      qs('#bookContainer').style.background = notebook?.coverColor || 'linear-gradient(150deg,#ffcae3,#f7b7d8)';
     }
 
     function showBookCover(){
@@ -1542,7 +1721,7 @@
     qs('#filterNotebook').addEventListener('change', renderNotes);
     qs('#searchInput').addEventListener('input', renderNotes);
     qs('#closeEditor').addEventListener('click', ()=>closeEditor());
-    document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeEditor(); qs('#overlayNotebook').style.display='none'; closeNotebookView(); closeBookMode(); } });
+    document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeEditor(); qs('#overlayNotebook').style.display='none'; closeNotebookView(); closeBookMode(); closeCalendarModal(); } });
     qs('#closeNotebookView').addEventListener('click', closeNotebookView);
     qs('#openBookModeInline').addEventListener('click', openBookMode);
     qs('#exitBookMode').addEventListener('click', closeBookMode);
@@ -1593,12 +1772,93 @@
       editingNote=null;
     }
 
-    qs('#saveNote').addEventListener('click', ()=>{ saveCurrentNote({closeEditor:true}); });
+    qs('#saveNote').addEventListener('click', ()=>{
+      animateSaveButton();
+      saveCurrentNote({shouldClose:true});
+    });
+    qs('#calendarBtn').addEventListener('click', ()=>openCalendarModal());
     qs('#deleteNoteBtn').addEventListener('click', ()=>{
       if(editingNote && confirm('¿Eliminar nota?')){ state.notes = state.notes.filter(n=>n.id!==editingNote.id); saveState(); renderNotes(); refreshNotebookWorkspace(); closeEditor(); }
     });
 
-    function saveCurrentNote({closeEditor=false} = {}){
+
+    const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const WEEK_NAMES = ['L','M','M','J','V','S','D'];
+    let calendarDate = new Date();
+    let selectedCalendarDay = null;
+
+    function openCalendarModal(){
+      calendarDate = new Date();
+      selectedCalendarDay = null;
+      renderCalendar();
+      qs('#overlayCalendar').style.display = 'flex';
+    }
+
+    function closeCalendarModal(){
+      qs('#overlayCalendar').style.display = 'none';
+    }
+
+    function renderCalendar(){
+      const grid = qs('#calendarGrid');
+      const year = calendarDate.getFullYear();
+      const month = calendarDate.getMonth();
+      qs('#calendarTitle').textContent = `${MONTH_NAMES[month]} ${year}`;
+      grid.innerHTML = '';
+      WEEK_NAMES.forEach(day=>{
+        const wd = document.createElement('div');
+        wd.className = 'calendar-weekday';
+        wd.textContent = day;
+        grid.appendChild(wd);
+      });
+      const first = new Date(year, month, 1);
+      const firstDay = (first.getDay() + 6) % 7;
+      const days = new Date(year, month + 1, 0).getDate();
+      for(let i=0;i<firstDay;i++){
+        const blank = document.createElement('div');
+        grid.appendChild(blank);
+      }
+      for(let day=1; day<=days; day++){
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'calendar-day';
+        btn.textContent = day;
+        btn.addEventListener('click', ()=>{
+          selectedCalendarDay = new Date(year, month, day);
+          qsa('.calendar-day').forEach(d=>d.classList.remove('active'));
+          btn.classList.add('active');
+        });
+        grid.appendChild(btn);
+      }
+    }
+
+    function animateSaveButton(){
+      const btn = qs('#saveNote');
+      const original = 'Guardar';
+      btn.classList.add('saving');
+      btn.textContent = 'Guardando...';
+      setTimeout(()=>{
+        btn.classList.remove('saving');
+        btn.classList.add('saved');
+        btn.textContent = 'Guardado ✓';
+        setTimeout(()=>{
+          btn.classList.remove('saved');
+          btn.textContent = original;
+        }, 900);
+      }, 420);
+    }
+
+    qs('#calendarPrev').addEventListener('click', ()=>{ calendarDate.setMonth(calendarDate.getMonth()-1); renderCalendar(); });
+    qs('#calendarNext').addEventListener('click', ()=>{ calendarDate.setMonth(calendarDate.getMonth()+1); renderCalendar(); });
+    qs('#closeCalendar').addEventListener('click', closeCalendarModal);
+    qs('#insertCalendarDate').addEventListener('click', ()=>{
+      if(!selectedCalendarDay) return alert('Selecciona una fecha');
+      const formatted = selectedCalendarDay.toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' });
+      insertHtmlAtCursor(`<p><strong>📅 ${formatted}</strong></p>`);
+      saveCurrentNote({shouldClose:false});
+      closeCalendarModal();
+    });
+
+    function saveCurrentNote({shouldClose=false} = {}){
       const title = qs('#noteTitle').value;
       const content = qs('#editor').innerHTML;
       const notebook = qs('#editorNotebook').value || state.notebooks[0].id;
@@ -1613,14 +1873,14 @@
         editingNote = newNote;
       }
       saveState(); renderNotes(); refreshNotebookWorkspace();
-      if(closeEditor){ editingNote=null; closeEditor(); }
+      if(shouldClose){ editingNote=null; closeEditor(); }
     }
 
     function setupAutosave(){
       const editor = qs('#editor'); const titleEl = qs('#noteTitle');
       let timer; editor.oninput = titleEl.oninput = ()=>{
         clearTimeout(timer);
-        timer=setTimeout(()=>saveCurrentNote({closeEditor:false}),700);
+        timer=setTimeout(()=>saveCurrentNote({shouldClose:false}),700);
       };
     }
 
@@ -1632,6 +1892,7 @@
       qs('#overlayNotebook').style.display='flex';
       qs('#nbModalTitle').textContent = nb ? (renameOnly?'Renombrar cuaderno':'Editar cuaderno'):'Nuevo cuaderno';
       qs('#nbName').value = nb?.name||'';
+      qs('#nbCoverColor').value = nb?.coverColor || '#f08aba';
       const coverInput = qs('#nbCoverFile');
       coverInput.value = '';
       coverInput.disabled = renameOnly;
@@ -1642,9 +1903,11 @@
       if(editingNotebook){
         editingNotebook.name=name;
         if(!renameOnly && qs('#nbCoverFile').files[0]) editingNotebook.cover = await fileToDataUrl(qs('#nbCoverFile').files[0]);
+        editingNotebook.coverColor = qs('#nbCoverColor').value;
       } else {
         const cover = qs('#nbCoverFile').files[0]? await fileToDataUrl(qs('#nbCoverFile').files[0]):null;
-        state.notebooks.push({id:uid(),name,cover});
+        const coverColor = qs('#nbCoverColor').value;
+        state.notebooks.push({id:uid(),name,cover,coverColor});
       }
       saveState(); renderNotebooks(); qs('#overlayNotebook').style.display='none';
     });
@@ -1698,7 +1961,7 @@
       }
       // apply to editor background for visual feedback
       qs('#editor').style.background = bg;
-      saveCurrentNote({closeEditor:false});
+      saveCurrentNote({shouldClose:false});
     });
 
     qs('#textColorTool').addEventListener('click', ()=>{
@@ -1708,16 +1971,16 @@
       const color = e.target.value;
       document.execCommand('foreColor', false, color);
       qs('#editor').focus();
-      saveCurrentNote({closeEditor:false});
+      saveCurrentNote({shouldClose:false});
     });
 
     // Quick palette generation
-    const quickColors = ['#fffbe6','#ffdfe8','#ffe9c7','#e6f7ff','#e6ffe6','#f0e6ff','#fff0f0','#f7f0ff'];
+    const quickColors = ['#fff5fb','#ffd9ec','#f8d6ff','#ffe7f2','#fddaf0','#ffe0d2','#f0dbff','#e8d9ff','#f8cfe5','#ffd6e8'];
     function renderQuickPalette(){
       const container = qs('#quickPalette'); container.innerHTML='';
       quickColors.forEach(c=>{
         const btn = document.createElement('button'); btn.style.background=c;
-        btn.addEventListener('click', ()=>{ qs('#editor').style.background=c; if(editingNote) editingNote.bgColor=c; saveCurrentNote({closeEditor:false}); });
+        btn.addEventListener('click', ()=>{ qs('#editor').style.background=c; if(editingNote) editingNote.bgColor=c; saveCurrentNote({shouldClose:false}); });
         container.appendChild(btn);
       });
     }
@@ -1729,9 +1992,9 @@
       const f = e.target.files[0]; if(!f) return;
       const dataUrl = await fileToDataUrl(f);
       // insert at caret position in contenteditable
-      insertHtmlAtCursor(`<img src="${dataUrl}" class="note-img" style="width:70%;display:block;margin:8px 0" />`);
+      insertHtmlAtCursor(`<img src="${dataUrl}" class="note-img" style="width:70%;display:block;margin:8px 0;position:relative;left:0px;top:0px;" />`);
       // autosave will pick up changes
-      saveCurrentNote({closeEditor:false});
+      saveCurrentNote({shouldClose:false});
       e.target.value = '';
     });
 
@@ -1760,6 +2023,97 @@
       }
     }
 
+    function animateTap(el){
+      if(!el) return;
+      el.classList.remove('tap-anim');
+      void el.offsetWidth;
+      el.classList.add('tap-anim');
+    }
+
+    function changeSelectionFontSize(step){
+      const size = step > 0 ? 5 : 2;
+      document.execCommand('fontSize', false, size);
+      qs('#editor').focus();
+      saveCurrentNote({shouldClose:false});
+    }
+
+    qs('#fontIncrease').addEventListener('click', ()=>changeSelectionFontSize(1));
+    qs('#fontDecrease').addEventListener('click', ()=>changeSelectionFontSize(-1));
+
+    const drawingBoard = qs('#drawingBoard');
+    const templatePanel = qs('#templatePanel');
+    qs('#toggleDrawBoard').addEventListener('click', ()=>{
+      drawingBoard.style.display = drawingBoard.style.display === 'block' ? 'none' : 'block';
+      templatePanel.style.display = 'none';
+    });
+    qs('#insertTemplateBtn').addEventListener('click', ()=>{
+      templatePanel.style.display = templatePanel.style.display === 'block' ? 'none' : 'block';
+      drawingBoard.style.display = 'none';
+    });
+
+    qsa('.template-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const src = btn.dataset.template;
+        insertHtmlAtCursor(`<p><strong>📎 Foto plantilla:</strong> ${src}</p>`);
+        saveCurrentNote({shouldClose:false});
+      });
+    });
+
+    const drawCanvas = qs('#drawCanvas');
+    const drawCtx = drawCanvas.getContext('2d');
+    let isDrawing = false;
+    let eraserOn = false;
+    function drawPoint(e){
+      const rect = drawCanvas.getBoundingClientRect();
+      const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+      const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+      return {x, y};
+    }
+    function setBrush(){
+      const brush = qs('#drawBrush').value;
+      const size = Number(qs('#drawSize').value);
+      drawCtx.lineWidth = brush === 'marker' ? size * 2 : size;
+      drawCtx.lineCap = brush === 'square' ? 'butt' : 'round';
+      drawCtx.globalAlpha = brush === 'marker' ? 0.45 : 1;
+      drawCtx.strokeStyle = eraserOn ? '#ffffff' : qs('#drawColor').value;
+    }
+    function startDraw(e){
+      isDrawing = true;
+      setBrush();
+      const p = drawPoint(e);
+      drawCtx.beginPath();
+      drawCtx.moveTo(p.x, p.y);
+      e.preventDefault();
+    }
+    function moveDraw(e){
+      if(!isDrawing) return;
+      const p = drawPoint(e);
+      drawCtx.lineTo(p.x, p.y);
+      drawCtx.stroke();
+      e.preventDefault();
+    }
+    function endDraw(){ isDrawing = false; drawCtx.closePath(); }
+    drawCtx.fillStyle = '#ffffff';
+    drawCtx.fillRect(0,0,drawCanvas.width,drawCanvas.height);
+    drawCanvas.addEventListener('mousedown', startDraw);
+    drawCanvas.addEventListener('mousemove', moveDraw);
+    window.addEventListener('mouseup', endDraw);
+    drawCanvas.addEventListener('touchstart', startDraw, {passive:false});
+    drawCanvas.addEventListener('touchmove', moveDraw, {passive:false});
+    drawCanvas.addEventListener('touchend', endDraw);
+
+    qs('#drawEraser').addEventListener('click', ()=>{ eraserOn = !eraserOn; });
+    qs('#clearDrawCanvas').addEventListener('click', ()=>{
+      drawCtx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
+      drawCtx.fillStyle = '#ffffff';
+      drawCtx.fillRect(0,0,drawCanvas.width,drawCanvas.height);
+    });
+    qs('#saveDrawingBtn').addEventListener('click', ()=>{
+      const dataUrl = drawCanvas.toDataURL('image/png');
+      insertHtmlAtCursor(`<img src="${dataUrl}" class="note-img" style="width:90%;display:block;margin:10px auto;position:relative;left:0px;top:0px;" />`);
+      saveCurrentNote({shouldClose:false});
+    });
+
     // --- Rich text tools ---
     qsa('.toolbar [data-cmd]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
@@ -1787,7 +2141,7 @@
     qs('#emojiSelect').addEventListener('change', (e)=>{
       if(!e.target.value) return;
       insertHtmlAtCursor(`${e.target.value} `);
-      saveCurrentNote({closeEditor:false});
+      saveCurrentNote({shouldClose:false});
       e.target.value = '';
     });
 
@@ -1799,7 +2153,7 @@
 
     qs('#insertChecklist').addEventListener('click', ()=>{
       insertHtmlAtCursor(`<div><label><input type="checkbox" /> Tarea</label></div>`);
-      saveCurrentNote({closeEditor:false});
+      saveCurrentNote({shouldClose:false});
     });
 
     // --- Image controls ---
@@ -1807,10 +2161,13 @@
     const imageSize = qs('#imageSize');
     const imageRotate = qs('#imageRotate');
     const imageAlign = qs('#imageAlign');
+    const pinImageBtn = qs('#pinImageBtn');
 
     qs('#editor').addEventListener('click', (e)=>{
       const target = e.target;
       if(target && target.tagName === 'IMG'){
+        qsa('#editor img').forEach(img=>img.classList.remove('selected'));
+        target.classList.add('selected');
         currentImage = target;
         imageControls.style.display = 'flex';
         const width = parseInt(target.style.width || '70', 10);
@@ -1819,10 +2176,36 @@
         imageRotate.value = rotateMatch ? rotateMatch[1] : 0;
         const alignValue = target.dataset.align || 'left';
         imageAlign.value = alignValue;
+        pinImageBtn.textContent = target.dataset.pinned === 'true' ? 'Desfijar imagen' : 'Fijar imagen';
       } else {
+        qsa('#editor img').forEach(img=>img.classList.remove('selected'));
         currentImage = null;
         imageControls.style.display = 'none';
+        pinImageBtn.textContent = 'Fijar imagen';
       }
+    });
+
+    let dragImageState = null;
+    qs('#editor').addEventListener('pointerdown', (e)=>{
+      const target = e.target;
+      if(!(target && target.tagName === 'IMG')) return;
+      if(target.dataset.pinned === 'true') return;
+      dragImageState = {el: target, startX: e.clientX, startY: e.clientY, left: parseFloat(target.style.left || 0), top: parseFloat(target.style.top || 0)};
+      target.setPointerCapture(e.pointerId);
+    });
+
+    qs('#editor').addEventListener('pointermove', (e)=>{
+      if(!dragImageState) return;
+      const dx = e.clientX - dragImageState.startX;
+      const dy = e.clientY - dragImageState.startY;
+      dragImageState.el.style.left = `${dragImageState.left + dx}px`;
+      dragImageState.el.style.top = `${dragImageState.top + dy}px`;
+    });
+
+    qs('#editor').addEventListener('pointerup', ()=>{
+      if(!dragImageState) return;
+      saveCurrentNote({shouldClose:false});
+      dragImageState = null;
     });
 
     qs('#editor').addEventListener('change', (e)=>{
@@ -1833,7 +2216,7 @@
         } else {
           target.removeAttribute('checked');
         }
-        saveCurrentNote({closeEditor:false});
+        saveCurrentNote({shouldClose:false});
       }
     });
 
@@ -1845,7 +2228,7 @@
         } else {
           target.removeAttribute('checked');
         }
-        saveCurrentNote({closeEditor:false});
+        saveCurrentNote({shouldClose:false});
       }
     });
 
@@ -1872,19 +2255,28 @@
     imageSize.addEventListener('input', ()=>{
       if(!currentImage) return;
       currentImage.style.width = `${imageSize.value}%`;
-      saveCurrentNote({closeEditor:false});
+      saveCurrentNote({shouldClose:false});
     });
 
     imageRotate.addEventListener('input', ()=>{
       if(!currentImage) return;
       currentImage.style.transform = `rotate(${imageRotate.value}deg)`;
-      saveCurrentNote({closeEditor:false});
+      saveCurrentNote({shouldClose:false});
     });
 
     imageAlign.addEventListener('change', ()=>{
       if(!currentImage) return;
       applyImageAlign(imageAlign.value);
-      saveCurrentNote({closeEditor:false});
+      saveCurrentNote({shouldClose:false});
+    });
+
+
+    pinImageBtn.addEventListener('click', ()=>{
+      if(!currentImage) return;
+      const pinned = currentImage.dataset.pinned === 'true';
+      currentImage.dataset.pinned = pinned ? 'false' : 'true';
+      pinImageBtn.textContent = pinned ? 'Fijar imagen' : 'Desfijar imagen';
+      saveCurrentNote({shouldClose:false});
     });
 
     qs('#removeImageBtn').addEventListener('click', ()=>{
@@ -1892,7 +2284,7 @@
       currentImage.remove();
       currentImage = null;
       imageControls.style.display = 'none';
-      saveCurrentNote({closeEditor:false});
+      saveCurrentNote({shouldClose:false});
     });
 
     // --- Utility: close overlays when clicking outside modal content ---
@@ -1928,12 +2320,17 @@
     // --- Init ---
     function init(){
       loadState();
+      state.notebooks = state.notebooks.map(nb=>({coverColor:'#f08aba', ...nb}));
       renderNotebooks();
       renderNotes();
       showView('notes');
       // ensure editor notebook select exists
       populateEditorNotebook();
       maybeShowOnboarding();
+
+      qsa('button, .btn, .toolbar button, .icon-btn').forEach(el=>{
+        el.addEventListener('click', ()=>animateTap(el));
+      });
     }
     init();
 
