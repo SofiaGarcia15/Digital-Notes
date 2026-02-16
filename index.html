@@ -549,6 +549,96 @@
       touch-action:none;
     }
 
+    .template-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+      gap:12px;
+    }
+
+    .template-card{
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px;
+      background:var(--card-bg);
+      cursor:pointer;
+    }
+
+    .template-card img{
+      width:100%;
+      height:180px;
+      object-fit:cover;
+      border-radius:8px;
+      display:block;
+      margin-bottom:8px;
+    }
+
+    .template-card span{
+      font-weight:700;
+      color:var(--panel-text);
+    }
+
+    .compact-color-palette{
+      display:none;
+      margin-bottom:10px;
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:8px;
+      background:var(--panel-bg);
+    }
+
+    .compact-color-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(28px,1fr));
+      gap:6px;
+      max-width:260px;
+    }
+
+    .compact-color-grid button{
+      width:28px;
+      height:28px;
+      border-radius:7px;
+      border:1px solid rgba(0,0,0,0.14);
+      cursor:pointer;
+    }
+
+    .draw-fullscreen-overlay{
+      position:fixed;
+      inset:0;
+      z-index:220;
+      background:rgba(14,10,12,0.95);
+      display:none;
+      flex-direction:column;
+      padding:10px;
+    }
+
+    .draw-fullscreen-toolbar{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-bottom:8px;
+      color:#fff;
+    }
+
+    .draw-fullscreen-toolbar input,
+    .draw-fullscreen-toolbar select,
+    .draw-fullscreen-toolbar button{
+      padding:8px;
+      border-radius:10px;
+      border:1px solid #5e5860;
+      background:#272429;
+      color:#fff;
+    }
+
+    #drawFullscreenCanvas{
+      flex:1;
+      width:100%;
+      border-radius:12px;
+      background:#fff;
+      touch-action:none;
+      cursor:crosshair;
+    }
+
     .calendar-btn{
       background:linear-gradient(180deg,#ffc2dd,#ff9fca);
       color:#6a2546;
@@ -815,7 +905,13 @@
       background:#fff5fa;
       padding:24px 28px;
       position:relative;
-      overflow:hidden
+      overflow:hidden;
+      color:#302127;
+    }
+
+    [data-theme="dark"] .book-leaf{
+      background:#312733;
+      color:#f6edf2;
     }
 
     .book-leaf::before{
@@ -1087,16 +1183,15 @@
         height:48px;
       }
       .book-spread{
-        grid-template-columns:1fr;
+        grid-template-columns:1fr 1fr;
+        min-width:680px;
       }
-      .book-spread::before,
-      #bookRightPage{
-        display:none;
-      }
+      .book-spread::before{ width:7px; }
       .book-container{
         min-height:460px;
         padding:10px;
         width:100%;
+        overflow-x:auto;
       }
       .book-cover-screen{
         min-height:420px;
@@ -1104,6 +1199,7 @@
       .book-stage{ width:100%; }
       .book-nav{ width:100%; justify-content:center; }
       .book-content{ max-height:340px; }
+      .template-card img{height:140px;}
     }
 
     @media (min-width:601px) and (max-width:1024px){
@@ -1255,11 +1351,12 @@
           <div class="tool-group">
             <input type="color" id="highlightColor" value="#fff2a8" title="Subrayado de color">
             <button id="applyHighlight">🖍️</button>
-            <button id="openColorPanel">🎨</button>
+            <button id="toggleCompactPalette" title="Color de fondo">🎨 Fondo</button>
+            <button id="openColorPanel">Más colores</button>
           </div>
           <div class="tool-group">
             <button id="insertImageBtn">🖼️</button>
-            <button id="toggleDrawBoard">✏️ Dibujo</button>
+            <button id="openFullscreenDraw">✏️ Dibujo completo</button>
             <button id="insertTemplateBtn">📄 Plantilla</button>
             <input type="file" id="noteImageFile" accept="image/*" class="file-input">
           </div>
@@ -1272,6 +1369,10 @@
           <button id="closeEditor" class="btn" style="background:#ddd">Cerrar</button>
           <button id="saveNote" class="btn">Guardar</button>
         </div>
+      </div>
+
+      <div class="compact-color-palette" id="compactColorPalette">
+        <div class="compact-color-grid" id="compactColorGrid"></div>
       </div>
 
       <div id="colorPanel" style="display:none;margin-bottom:10px">
@@ -1311,13 +1412,10 @@
 
       <div id="templatePanel" class="drawing-board">
         <div class="draw-toolbar">
-          <span class="tool-label">Plantillas (solo nombre de foto)</span>
-          <button class="template-btn" data-template="plantilla1.png">Plantilla 1</button>
-          <button class="template-btn" data-template="plantilla2.png">Plantilla 2</button>
-          <button class="template-btn" data-template="plantilla3.png">Plantilla 3</button>
-          <button class="template-btn" data-template="plantilla4.png">Plantilla 4</button>
-          <button class="template-btn" data-template="plantilla5.png">Plantilla 5</button>
+          <span class="tool-label">Sesión de plantillas</span>
+          <span style="color:var(--muted);font-size:12px">Selecciona una tarjeta para abrirla en pantalla completa y escribir encima.</span>
         </div>
+        <div class="template-grid" id="templateGrid"></div>
       </div>
 
       <div class="image-controls" id="imageControls">
@@ -1422,6 +1520,51 @@
     </div>
   </div>
 
+  <div class="draw-fullscreen-overlay" id="drawFullscreenOverlay">
+    <div class="draw-fullscreen-toolbar">
+      <button id="closeFullscreenDraw">Cerrar</button>
+      <label>Color <input type="color" id="drawFsColor" value="#d4629b"></label>
+      <label>Tamaño <input type="range" id="drawFsSize" min="1" max="32" value="5"></label>
+      <label>Pincel
+        <select id="drawFsBrush">
+          <option value="round">Redondo</option>
+          <option value="square">Cuadrado</option>
+          <option value="marker">Marcador</option>
+        </select>
+      </label>
+      <button id="drawFsEraser">Borrador</button>
+      <button id="drawFsClear">Limpiar</button>
+      <button id="drawFsSave" class="btn">Guardar en nota</button>
+    </div>
+    <canvas id="drawFullscreenCanvas" width="1600" height="900"></canvas>
+  </div>
+
+  <div class="overlay" id="overlayTemplateEditor">
+    <div class="modal" style="max-width:1200px;padding:0;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--panel-bg);border-bottom:1px solid var(--border)">
+        <strong id="templateEditorTitle">Editor de plantilla</strong>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <label>Color <input type="color" id="templateDrawColor" value="#2e2e2e"></label>
+          <label>Tamaño <input type="range" id="templateDrawSize" min="1" max="28" value="3"></label>
+          <label>Pincel
+            <select id="templateDrawBrush">
+              <option value="round">Redondo</option>
+              <option value="square">Cuadrado</option>
+              <option value="marker">Marcador</option>
+            </select>
+          </label>
+          <button id="templateEraserBtn">Borrador</button>
+          <button id="templateClearBtn">Limpiar</button>
+          <button id="templateCloseBtn" class="btn" style="background:#ddd">Cerrar</button>
+        </div>
+      </div>
+      <div style="position:relative;height:min(88vh,1000px);background:#111">
+        <img id="templateBgImage" alt="Plantilla seleccionada" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none;-webkit-user-drag:none;">
+        <canvas id="templateDrawCanvas" width="1400" height="920" style="position:absolute;inset:0;width:100%;height:100%;touch-action:none"></canvas>
+      </div>
+    </div>
+  </div>
+
   <div class="icon-btn" id="fab" title="Agregar nota">
     <img src="logodn.index.png" alt="Digital Notes" style="width:36px;height:36px;object-fit:contain;border-radius:8px">
   </div>
@@ -1443,7 +1586,7 @@
        Digital Notes 2026 - JS
        Todo en un solo archivo
        --------------------------- */
-    const STORAGE_KEY = 'digitalNotesData_v6';
+    const STORAGE_KEY = 'digitalNotesData_v7';
     const ONBOARDING_KEY = 'digitalNotesOnboarding_v1';
     let state = { notebooks: [], notes: [], darkMode: false };
     const uid = ()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -1460,6 +1603,14 @@
       return div.querySelector('img')?.src || null;
     };
     const fileToDataUrl = file=> new Promise(res=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.readAsDataURL(file); });
+    const getLocaleTag = ()=> navigator.language || Intl.DateTimeFormat().resolvedOptions().locale || 'es-MX';
+    const TEMPLATE_ITEMS = [
+      { src:'plantilla1.png', name:'Plantilla 1' },
+      { src:'plantilla2.png', name:'Plantilla 2' },
+      { src:'plantilla3.png', name:'Plantilla 3' },
+      { src:'plantilla4.png', name:'Plantilla 4' },
+      { src:'plantilla5.png', name:'Plantilla 5' }
+    ];
 
     // --- Storage ---
     function loadState(){
@@ -1547,7 +1698,7 @@
         const title = document.createElement('div'); title.className='note-title'; title.textContent=truncate(n.title,35);
         const body = document.createElement('div'); body.className='note-body preview'; body.textContent = truncate(stripHtml(n.content), 160);
         const firstImage = getFirstImageSrc(n.content);
-        const meta = document.createElement('div'); meta.className='note-meta'; meta.textContent = new Date(n.updated).toLocaleString();
+        const meta = document.createElement('div'); meta.className='note-meta'; meta.textContent = new Date(n.updated).toLocaleString(getLocaleTag());
         card.appendChild(title);
         card.appendChild(body);
         if(firstImage){ const thumb = document.createElement('img'); thumb.className='note-thumb small'; thumb.src=firstImage; thumb.alt='Imagen de la nota'; card.appendChild(thumb); }
@@ -1556,6 +1707,20 @@
         if(n.textColor) card.style.color=n.textColor;
         card.addEventListener('click', ()=>openEditor(n));
         card.addEventListener('dragstart', e=>{ e.dataTransfer.setData('text/note-id', n.id); });
+        grid.appendChild(card);
+      });
+    }
+
+    function renderTemplateGallery(){
+      const grid = qs('#templateGrid');
+      if(!grid) return;
+      grid.innerHTML = '';
+      TEMPLATE_ITEMS.forEach(template=>{
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'template-card';
+        card.innerHTML = `<img src="${template.src}" alt="${template.name}"><span>${template.name}</span>`;
+        card.addEventListener('click', ()=>openTemplateEditor(template));
         grid.appendChild(card);
       });
     }
@@ -1590,7 +1755,7 @@
           const title = document.createElement('div'); title.className='note-title'; title.textContent=truncate(n.title || 'Sin título', 60);
           const body = document.createElement('div'); body.className='note-body preview'; body.textContent = truncate(stripHtml(n.content), 250);
           const firstImage = getFirstImageSrc(n.content);
-          const meta = document.createElement('div'); meta.className='note-meta'; meta.textContent = new Date(n.updated).toLocaleString();
+          const meta = document.createElement('div'); meta.className='note-meta'; meta.textContent = new Date(n.updated).toLocaleString(getLocaleTag());
           if(n.bgColor) card.style.background = n.bgColor;
           if(n.textColor) card.style.color = n.textColor;
           card.appendChild(title);
@@ -1687,7 +1852,7 @@
       }
       title.textContent = note.title || 'Sin título';
       content.innerHTML = note.content || '<p class="book-empty">Sin contenido.</p>';
-      meta.textContent = `Hoja ${displayIndex} de ${total} · ${new Date(note.updated).toLocaleDateString()}`;
+      meta.textContent = `Hoja ${displayIndex} de ${total} · ${new Date(note.updated).toLocaleDateString(getLocaleTag())}`;
       page.style.background = note.bgColor || '#f6ecd2';
       page.style.color = note.textColor || '';
     }
@@ -1782,14 +1947,13 @@
     });
 
 
-    const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
     const WEEK_NAMES = ['L','M','M','J','V','S','D'];
     let calendarDate = new Date();
-    let selectedCalendarDay = null;
+    let selectedCalendarDay = new Date();
 
     function openCalendarModal(){
       calendarDate = new Date();
-      selectedCalendarDay = null;
+      selectedCalendarDay = new Date();
       renderCalendar();
       qs('#overlayCalendar').style.display = 'flex';
     }
@@ -1802,7 +1966,9 @@
       const grid = qs('#calendarGrid');
       const year = calendarDate.getFullYear();
       const month = calendarDate.getMonth();
-      qs('#calendarTitle').textContent = `${MONTH_NAMES[month]} ${year}`;
+      const locale = getLocaleTag();
+      const monthLabel = new Date(year, month, 1).toLocaleDateString(locale, {month:'long', year:'numeric'});
+      qs('#calendarTitle').textContent = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
       grid.innerHTML = '';
       WEEK_NAMES.forEach(day=>{
         const wd = document.createElement('div');
@@ -1822,6 +1988,8 @@
         btn.type = 'button';
         btn.className = 'calendar-day';
         btn.textContent = day;
+        const isSelected = selectedCalendarDay && selectedCalendarDay.getFullYear() === year && selectedCalendarDay.getMonth() === month && selectedCalendarDay.getDate() === day;
+        if(isSelected) btn.classList.add('active');
         btn.addEventListener('click', ()=>{
           selectedCalendarDay = new Date(year, month, day);
           qsa('.calendar-day').forEach(d=>d.classList.remove('active'));
@@ -1852,7 +2020,7 @@
     qs('#closeCalendar').addEventListener('click', closeCalendarModal);
     qs('#insertCalendarDate').addEventListener('click', ()=>{
       if(!selectedCalendarDay) return alert('Selecciona una fecha');
-      const formatted = selectedCalendarDay.toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' });
+      const formatted = selectedCalendarDay.toLocaleDateString(getLocaleTag(), { day:'2-digit', month:'long', year:'numeric' });
       insertHtmlAtCursor(`<p><strong>📅 ${formatted}</strong></p>`);
       saveCurrentNote({shouldClose:false});
       closeCalendarModal();
@@ -2040,23 +2208,35 @@
     qs('#fontIncrease').addEventListener('click', ()=>changeSelectionFontSize(1));
     qs('#fontDecrease').addEventListener('click', ()=>changeSelectionFontSize(-1));
 
+    const compactBgColors = ['#fff8fc','#ffeef8','#ffe4f3','#ffdaf0','#f8ecff','#efe2ff','#e6f0ff','#e7fff7','#fdf7e3','#ffffff'];
+    function renderCompactPalette(){
+      const wrap = qs('#compactColorGrid');
+      if(!wrap) return;
+      wrap.innerHTML = '';
+      compactBgColors.forEach(color=>{
+        const sw = document.createElement('button');
+        sw.type = 'button';
+        sw.style.background = color;
+        sw.title = color;
+        sw.addEventListener('click', ()=>{
+          qs('#editor').style.background = color;
+          if(editingNote) editingNote.bgColor = color;
+          saveCurrentNote({shouldClose:false});
+        });
+        wrap.appendChild(sw);
+      });
+    }
+    qs('#toggleCompactPalette').addEventListener('click', ()=>{
+      const panel = qs('#compactColorPalette');
+      panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+      qs('#colorPanel').style.display = 'none';
+    });
+
     const drawingBoard = qs('#drawingBoard');
     const templatePanel = qs('#templatePanel');
-    qs('#toggleDrawBoard').addEventListener('click', ()=>{
-      drawingBoard.style.display = drawingBoard.style.display === 'block' ? 'none' : 'block';
-      templatePanel.style.display = 'none';
-    });
     qs('#insertTemplateBtn').addEventListener('click', ()=>{
       templatePanel.style.display = templatePanel.style.display === 'block' ? 'none' : 'block';
       drawingBoard.style.display = 'none';
-    });
-
-    qsa('.template-btn').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const src = btn.dataset.template;
-        insertHtmlAtCursor(`<p><strong>📎 Foto plantilla:</strong> ${src}</p>`);
-        saveCurrentNote({shouldClose:false});
-      });
     });
 
     const drawCanvas = qs('#drawCanvas');
@@ -2112,6 +2292,163 @@
       const dataUrl = drawCanvas.toDataURL('image/png');
       insertHtmlAtCursor(`<img src="${dataUrl}" class="note-img" style="width:90%;display:block;margin:10px auto;position:relative;left:0px;top:0px;" />`);
       saveCurrentNote({shouldClose:false});
+    });
+
+    const drawFullscreenOverlay = qs('#drawFullscreenOverlay');
+    const drawFsCanvas = qs('#drawFullscreenCanvas');
+    const drawFsCtx = drawFsCanvas.getContext('2d');
+    let drawFsActive = false;
+    let drawFsEraser = false;
+
+    function drawFsPoint(evt){
+      const rect = drawFsCanvas.getBoundingClientRect();
+      const point = evt.touches ? evt.touches[0] : evt;
+      const scaleX = drawFsCanvas.width / rect.width;
+      const scaleY = drawFsCanvas.height / rect.height;
+      return { x:(point.clientX - rect.left) * scaleX, y:(point.clientY - rect.top) * scaleY };
+    }
+
+    function setFsBrush(){
+      const brush = qs('#drawFsBrush').value;
+      const size = Number(qs('#drawFsSize').value);
+      drawFsCtx.lineWidth = brush === 'marker' ? size * 2 : size;
+      drawFsCtx.lineCap = brush === 'square' ? 'butt' : 'round';
+      drawFsCtx.globalAlpha = brush === 'marker' ? 0.4 : 1;
+      drawFsCtx.strokeStyle = drawFsEraser ? '#ffffff' : qs('#drawFsColor').value;
+    }
+
+    function resizeFsCanvas(){
+      const old = drawFsCanvas.toDataURL('image/png');
+      const ratio = window.devicePixelRatio || 1;
+      const rect = drawFsCanvas.getBoundingClientRect();
+      drawFsCanvas.width = Math.max(800, Math.floor(rect.width * ratio));
+      drawFsCanvas.height = Math.max(460, Math.floor(rect.height * ratio));
+      const temp = new Image();
+      temp.onload = ()=> drawFsCtx.drawImage(temp, 0, 0, drawFsCanvas.width, drawFsCanvas.height);
+      temp.src = old;
+    }
+
+    function openFullscreenDraw(){
+      drawFullscreenOverlay.style.display = 'flex';
+      setTimeout(resizeFsCanvas, 40);
+    }
+
+    function closeFullscreenDraw(){
+      drawFullscreenOverlay.style.display = 'none';
+      drawFsActive = false;
+    }
+
+    function fsStart(e){
+      drawFsActive = true;
+      setFsBrush();
+      const p = drawFsPoint(e);
+      drawFsCtx.beginPath();
+      drawFsCtx.moveTo(p.x,p.y);
+      e.preventDefault();
+    }
+    function fsMove(e){
+      if(!drawFsActive) return;
+      const p = drawFsPoint(e);
+      drawFsCtx.lineTo(p.x,p.y);
+      drawFsCtx.stroke();
+      e.preventDefault();
+    }
+    function fsEnd(){ drawFsActive = false; drawFsCtx.closePath(); }
+
+    drawFsCtx.fillStyle = '#ffffff';
+    drawFsCtx.fillRect(0,0,drawFsCanvas.width,drawFsCanvas.height);
+    drawFsCanvas.addEventListener('mousedown', fsStart);
+    drawFsCanvas.addEventListener('mousemove', fsMove);
+    window.addEventListener('mouseup', fsEnd);
+    drawFsCanvas.addEventListener('touchstart', fsStart, {passive:false});
+    drawFsCanvas.addEventListener('touchmove', fsMove, {passive:false});
+    drawFsCanvas.addEventListener('touchend', fsEnd);
+
+    qs('#openFullscreenDraw').addEventListener('click', openFullscreenDraw);
+    qs('#closeFullscreenDraw').addEventListener('click', closeFullscreenDraw);
+    qs('#drawFsEraser').addEventListener('click', ()=>{ drawFsEraser = !drawFsEraser; });
+    qs('#drawFsClear').addEventListener('click', ()=>{
+      drawFsCtx.clearRect(0,0,drawFsCanvas.width,drawFsCanvas.height);
+      drawFsCtx.fillStyle = '#ffffff';
+      drawFsCtx.fillRect(0,0,drawFsCanvas.width,drawFsCanvas.height);
+    });
+    qs('#drawFsSave').addEventListener('click', ()=>{
+      const dataUrl = drawFsCanvas.toDataURL('image/png');
+      insertHtmlAtCursor(`<img src="${dataUrl}" class="note-img" style="width:95%;display:block;margin:10px auto;position:relative;left:0px;top:0px;" />`);
+      saveCurrentNote({shouldClose:false});
+      closeFullscreenDraw();
+    });
+
+    function attachCanvasDrawing(canvasEl, options){
+      const ctx = canvasEl.getContext('2d');
+      let drawing = false;
+      let eraser = false;
+      const getPoint = evt=>{
+        const rect = canvasEl.getBoundingClientRect();
+        const point = evt.touches ? evt.touches[0] : evt;
+        const scaleX = canvasEl.width / rect.width;
+        const scaleY = canvasEl.height / rect.height;
+        return {x:(point.clientX - rect.left) * scaleX, y:(point.clientY - rect.top) * scaleY};
+      };
+      const setBrush = ()=>{
+        const brush = qs(options.brush).value;
+        const size = Number(qs(options.size).value);
+        ctx.lineWidth = brush === 'marker' ? size * 2 : size;
+        ctx.lineCap = brush === 'square' ? 'butt' : 'round';
+        ctx.globalAlpha = brush === 'marker' ? 0.45 : 1;
+        ctx.strokeStyle = eraser ? 'rgba(0,0,0,0)' : qs(options.color).value;
+        ctx.globalCompositeOperation = eraser ? 'destination-out' : 'source-over';
+      };
+      const start = e=>{ drawing=true; setBrush(); const p=getPoint(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); e.preventDefault(); };
+      const move = e=>{ if(!drawing) return; const p=getPoint(e); ctx.lineTo(p.x,p.y); ctx.stroke(); e.preventDefault(); };
+      const end = ()=>{ drawing=false; ctx.closePath(); };
+      canvasEl.addEventListener('mousedown', start);
+      canvasEl.addEventListener('mousemove', move);
+      canvasEl.addEventListener('touchstart', start, {passive:false});
+      canvasEl.addEventListener('touchmove', move, {passive:false});
+      canvasEl.addEventListener('touchend', end);
+      window.addEventListener('mouseup', end);
+      qs(options.eraser).addEventListener('click', ()=>{ eraser = !eraser; });
+      qs(options.clear).addEventListener('click', ()=>ctx.clearRect(0,0,canvasEl.width,canvasEl.height));
+      return { ctx, clear:()=>ctx.clearRect(0,0,canvasEl.width,canvasEl.height) };
+    }
+
+    const templateCanvas = qs('#templateDrawCanvas');
+    const templateBgImage = qs('#templateBgImage');
+    const overlayTemplateEditor = qs('#overlayTemplateEditor');
+    let templatePad = null;
+
+    function ensureTemplatePad(){
+      if(templatePad) return templatePad;
+      templatePad = attachCanvasDrawing(templateCanvas, {
+        color:'#templateDrawColor',
+        size:'#templateDrawSize',
+        brush:'#templateDrawBrush',
+        eraser:'#templateEraserBtn',
+        clear:'#templateClearBtn'
+      });
+      return templatePad;
+    }
+
+    function fitTemplateCanvas(){
+      const wrap = templateCanvas.parentElement.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      templateCanvas.width = Math.floor(wrap.width * ratio);
+      templateCanvas.height = Math.floor(wrap.height * ratio);
+    }
+
+    function openTemplateEditor(template){
+      qs('#templateEditorTitle').textContent = `Editor: ${template.name}`;
+      templateBgImage.src = template.src;
+      overlayTemplateEditor.style.display = 'flex';
+      fitTemplateCanvas();
+      ensureTemplatePad().clear();
+    }
+
+    qs('#templateCloseBtn').addEventListener('click', ()=>overlayTemplateEditor.style.display='none');
+    window.addEventListener('resize', ()=>{
+      if(drawFullscreenOverlay.style.display === 'flex') resizeFsCanvas();
+      if(overlayTemplateEditor.style.display === 'flex') fitTemplateCanvas();
     });
 
     // --- Rich text tools ---
@@ -2323,9 +2660,11 @@
       state.notebooks = state.notebooks.map(nb=>({coverColor:'#f08aba', ...nb}));
       renderNotebooks();
       renderNotes();
+      renderTemplateGallery();
       showView('notes');
       // ensure editor notebook select exists
       populateEditorNotebook();
+      renderCompactPalette();
       maybeShowOnboarding();
 
       qsa('button, .btn, .toolbar button, .icon-btn').forEach(el=>{
