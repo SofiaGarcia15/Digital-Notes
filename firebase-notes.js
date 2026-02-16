@@ -16,7 +16,10 @@ import {
   onSnapshot,
   serverTimestamp,
   doc,
-  orderBy
+  orderBy,
+  updateDoc,
+  deleteDoc,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -35,6 +38,7 @@ const db = getFirestore(app);
 const authSection = document.getElementById("authSection");
 const notesSection = document.getElementById("notesSection");
 const authMessage = document.getElementById("authMessage");
+const notesMessage = document.getElementById("notesMessage");
 const currentUser = document.getElementById("currentUser");
 
 const showRegisterBtn = document.getElementById("showRegisterBtn");
@@ -53,15 +57,25 @@ const loginPassword = document.getElementById("loginPassword");
 
 const noteForm = document.getElementById("noteForm");
 const noteTitle = document.getElementById("noteTitle");
+const noteCategory = document.getElementById("noteCategory");
 const noteContent = document.getElementById("noteContent");
+const notePinned = document.getElementById("notePinned");
+
+const searchInput = document.getElementById("searchInput");
+const sortSelect = document.getElementById("sortSelect");
+const totalNotes = document.getElementById("totalNotes");
+const pinnedNotes = document.getElementById("pinnedNotes");
+const categoryCount = document.getElementById("categoryCount");
+
 const notesList = document.getElementById("notesList");
 const logoutBtn = document.getElementById("logoutBtn");
 
 let unsubscribeNotes = null;
+let notesCache = [];
 
-function showMessage(message, type = "") {
-  authMessage.textContent = message;
-  authMessage.className = `message ${type}`.trim();
+function showMessage(target, message, type = "") {
+  target.textContent = message;
+  target.className = `message ${type}`.trim();
 }
 
 function switchAuthTab(tab) {
@@ -79,29 +93,166 @@ function switchAuthTab(tab) {
   showLoginBtn.classList.add("active");
 }
 
-function renderNotes(documents) {
+function formatDate(value) {
+  const date = value?.toDate?.() || null;
+  return date ? date.toLocaleString("es-ES") : "Guardando fecha...";
+}
+
+function updateStats(notes) {
+  totalNotes.textContent = String(notes.length);
+  pinnedNotes.textContent = String(notes.filter((note) => note.pinned).length);
+
+  const categories = new Set(
+    notes
+      .map((note) => note.category?.trim().toLowerCase())
+      .filter(Boolean)
+  );
+
+  categoryCount.textContent = String(categories.size);
+}
+
+function getFilteredNotes() {
+  const keyword = searchInput.value.trim().toLowerCase();
+  const sortValue = sortSelect.value;
+
+  const filtered = notesCache.filter((noteDoc) => {
+    const note = noteDoc.data();
+    if (!keyword) {
+      return true;
+    }
+
+    return (
+      note.title.toLowerCase().includes(keyword)
+      || note.content.toLowerCase().includes(keyword)
+      || (note.category || "").toLowerCase().includes(keyword)
+    );
+  });
+
+  filtered.sort((a, b) => {
+    const noteA = a.data();
+    const noteB = b.data();
+
+    const timeA = noteA.createdAt?.seconds || 0;
+    const timeB = noteB.createdAt?.seconds || 0;
+
+    if (sortValue === "oldest") {
+      return timeA - timeB;
+    }
+
+    if (sortValue === "pinned") {
+      if (Boolean(noteA.pinned) !== Boolean(noteB.pinned)) {
+        return noteA.pinned ? -1 : 1;
+      }
+      return timeB - timeA;
+    }
+
+    return timeB - timeA;
+  });
+
+  return filtered;
+}
+
+function createNoteElement(noteDoc) {
+  const note = noteDoc.data();
+  const li = document.createElement("li");
+  li.className = "note-item";
+  li.dataset.noteId = noteDoc.id;
+
+  const top = document.createElement("div");
+  top.className = "note-top";
+
+  const titleWrapper = document.createElement("div");
+  const title = document.createElement("h3");
+  title.textContent = note.title;
+  titleWrapper.appendChild(title);
+
+  const meta = document.createElement("div");
+  meta.className = "note-meta";
+
+  if (note.category) {
+    const categoryTag = document.createElement("span");
+    categoryTag.className = "note-tag";
+    categoryTag.textContent = note.category;
+    meta.appendChild(categoryTag);
+  }
+
+  if (note.pinned) {
+    const pinnedTag = document.createElement("span");
+    pinnedTag.className = "note-tag";
+    pinnedTag.textContent = "Destacada";
+    meta.appendChild(pinnedTag);
+  }
+
+  const content = document.createElement("p");
+  content.textContent = note.content;
+
+  const date = document.createElement("span");
+  date.className = "note-date";
+  date.textContent = `Creada: ${formatDate(note.createdAt)}`;
+
+  const actions = document.createElement("div");
+  actions.className = "note-actions";
+
+  const pinButton = document.createElement("button");
+  pinButton.type = "button";
+  pinButton.className = "ghost-btn";
+  pinButton.dataset.action = "toggle-pin";
+  pinButton.textContent = note.pinned ? "Quitar destacada" : "Destacar";
+
+  const editButton = document.createElement("button");
+  editButton.type = "button";
+  editButton.className = "ghost-btn";
+  editButton.dataset.action = "edit";
+  editButton.textContent = "Editar";
+
+  const deleteButton = document.createElement("button");
+  deleteButton.type = "button";
+  deleteButton.className = "ghost-btn";
+  deleteButton.dataset.action = "delete";
+  deleteButton.textContent = "Eliminar";
+
+  top.append(titleWrapper, meta);
+  actions.append(pinButton, editButton, deleteButton);
+  li.append(top, content, date, actions);
+
+  return li;
+}
+
+function renderNotes() {
+  const filteredNotes = getFilteredNotes();
   notesList.innerHTML = "";
 
-  if (documents.length === 0) {
-    notesList.innerHTML = "<li class='note-item'><p>Aún no tienes notas guardadas.</p></li>";
+  if (filteredNotes.length === 0) {
+    const emptyItem = document.createElement("li");
+    emptyItem.className = "note-item";
+    emptyItem.textContent = notesCache.length === 0
+      ? "Aún no tienes notas guardadas."
+      : "No se encontraron notas para ese filtro.";
+    notesList.appendChild(emptyItem);
     return;
   }
 
-  for (const noteDoc of documents) {
-    const note = noteDoc.data();
-    const li = document.createElement("li");
-    li.className = "note-item";
+  for (const noteDoc of filteredNotes) {
+    notesList.appendChild(createNoteElement(noteDoc));
+  }
+}
 
-    const createdAt = note.createdAt?.toDate?.();
-    const dateLabel = createdAt ? createdAt.toLocaleString("es-ES") : "Guardando fecha...";
+async function loadUserProfile(user) {
+  const profileRef = doc(db, "usuarios", user.uid);
 
-    li.innerHTML = `
-      <h3>${note.title}</h3>
-      <p>${note.content}</p>
-      <span class="note-date">Creada: ${dateLabel}</span>
-    `;
+  try {
+    const profileSnapshot = await getDoc(profileRef);
 
-    notesList.appendChild(li);
+    if (!profileSnapshot.exists()) {
+      currentUser.textContent = `Sesión: ${user.email}`;
+      return;
+    }
+
+    const profile = profileSnapshot.data();
+    currentUser.textContent = `Sesión: ${profile.nombre || user.email} · ${user.email} · ${profile.edad || "-"} años`;
+  } catch (error) {
+    currentUser.textContent = `Sesión: ${user.email}`;
+    showMessage(notesMessage, `No se pudo cargar el perfil: ${error.message}`, "error");
   }
 }
 
@@ -117,12 +268,12 @@ registerForm.addEventListener("submit", async (event) => {
   const password = registerPassword.value;
 
   if (!nombre) {
-    showMessage("El nombre es obligatorio.", "error");
+    showMessage(authMessage, "El nombre es obligatorio.", "error");
     return;
   }
 
   if (!Number.isInteger(edad) || edad < 1) {
-    showMessage("Ingresa una edad válida.", "error");
+    showMessage(authMessage, "Ingresa una edad válida.", "error");
     return;
   }
 
@@ -138,12 +289,12 @@ registerForm.addEventListener("submit", async (event) => {
       creadoEn: serverTimestamp()
     });
 
-    showMessage("Registro exitoso. Ya puedes iniciar sesión.", "success");
+    showMessage(authMessage, "Registro exitoso. Ya puedes iniciar sesión.", "success");
     registerForm.reset();
     switchAuthTab("login");
     loginEmail.value = email;
   } catch (error) {
-    showMessage(`Error en registro: ${error.message}`, "error");
+    showMessage(authMessage, `Error en registro: ${error.message}`, "error");
   }
 });
 
@@ -152,10 +303,10 @@ loginForm.addEventListener("submit", async (event) => {
 
   try {
     await signInWithEmailAndPassword(auth, loginEmail.value.trim(), loginPassword.value);
-    showMessage("Login correcto.", "success");
+    showMessage(authMessage, "Login correcto.", "success");
     loginForm.reset();
   } catch (error) {
-    showMessage(`Error al iniciar sesión: ${error.message}`, "error");
+    showMessage(authMessage, `Error al iniciar sesión: ${error.message}`, "error");
   }
 });
 
@@ -164,14 +315,17 @@ noteForm.addEventListener("submit", async (event) => {
 
   const user = auth.currentUser;
   if (!user) {
-    showMessage("Debes iniciar sesión.", "error");
+    showMessage(notesMessage, "Debes iniciar sesión.", "error");
     return;
   }
 
   const title = noteTitle.value.trim();
   const content = noteContent.value.trim();
+  const category = noteCategory.value.trim();
+  const pinned = notePinned.checked;
 
   if (!title || !content) {
+    showMessage(notesMessage, "Completa el título y contenido.", "error");
     return;
   }
 
@@ -180,20 +334,107 @@ noteForm.addEventListener("submit", async (event) => {
       uid: user.uid,
       title,
       content,
-      createdAt: serverTimestamp()
+      category,
+      pinned,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
     });
 
     noteForm.reset();
+    showMessage(notesMessage, "Nota guardada correctamente.", "success");
   } catch (error) {
-    showMessage(`No se pudo guardar la nota: ${error.message}`, "error");
+    showMessage(notesMessage, `No se pudo guardar la nota: ${error.message}`, "error");
+  }
+});
+
+searchInput.addEventListener("input", renderNotes);
+sortSelect.addEventListener("change", renderNotes);
+
+notesList.addEventListener("click", async (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) {
+    return;
+  }
+
+  const action = target.dataset.action;
+  if (!action) {
+    return;
+  }
+
+  const noteItem = target.closest("[data-note-id]");
+  const noteId = noteItem?.dataset.noteId;
+
+  if (!noteId) {
+    return;
+  }
+
+  const noteRef = doc(db, "notas", noteId);
+  const noteDoc = notesCache.find((item) => item.id === noteId);
+
+  if (!noteDoc) {
+    return;
+  }
+
+  const note = noteDoc.data();
+
+  try {
+    if (action === "delete") {
+      const confirmed = window.confirm("¿Eliminar esta nota?");
+      if (!confirmed) {
+        return;
+      }
+
+      await deleteDoc(noteRef);
+      showMessage(notesMessage, "Nota eliminada.", "success");
+      return;
+    }
+
+    if (action === "toggle-pin") {
+      await updateDoc(noteRef, {
+        pinned: !note.pinned,
+        updatedAt: serverTimestamp()
+      });
+
+      showMessage(notesMessage, "Estado de destacada actualizado.", "success");
+      return;
+    }
+
+    if (action === "edit") {
+      const newTitle = window.prompt("Nuevo título:", note.title);
+      if (newTitle === null) {
+        return;
+      }
+
+      const newContent = window.prompt("Nuevo contenido:", note.content);
+      if (newContent === null) {
+        return;
+      }
+
+      const newCategory = window.prompt("Nueva categoría:", note.category || "");
+      if (newCategory === null) {
+        return;
+      }
+
+      await updateDoc(noteRef, {
+        title: newTitle.trim() || note.title,
+        content: newContent.trim() || note.content,
+        category: newCategory.trim(),
+        updatedAt: serverTimestamp()
+      });
+
+      showMessage(notesMessage, "Nota actualizada.", "success");
+    }
+  } catch (error) {
+    showMessage(notesMessage, `No se pudo completar la acción: ${error.message}`, "error");
   }
 });
 
 logoutBtn.addEventListener("click", async () => {
   await signOut(auth);
+  showMessage(authMessage, "Sesión cerrada.");
 });
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
   if (unsubscribeNotes) {
     unsubscribeNotes();
     unsubscribeNotes = null;
@@ -202,7 +443,9 @@ onAuthStateChanged(auth, (user) => {
   if (user) {
     authSection.classList.add("hidden");
     notesSection.classList.remove("hidden");
-    currentUser.textContent = `Sesión: ${user.email}`;
+    showMessage(notesMessage, "", "");
+
+    await loadUserProfile(user);
 
     const notesQuery = query(
       collection(db, "notas"),
@@ -211,14 +454,24 @@ onAuthStateChanged(auth, (user) => {
     );
 
     unsubscribeNotes = onSnapshot(notesQuery, (snapshot) => {
-      renderNotes(snapshot.docs);
+      notesCache = snapshot.docs;
+      updateStats(snapshot.docs.map((noteDoc) => noteDoc.data()));
+      renderNotes();
+    }, (error) => {
+      showMessage(notesMessage, `Error al cargar notas: ${error.message}`, "error");
     });
 
     return;
   }
 
+  notesCache = [];
   authSection.classList.remove("hidden");
   notesSection.classList.add("hidden");
   currentUser.textContent = "";
   notesList.innerHTML = "";
+  totalNotes.textContent = "0";
+  pinnedNotes.textContent = "0";
+  categoryCount.textContent = "0";
+  searchInput.value = "";
+  sortSelect.value = "newest";
 });
