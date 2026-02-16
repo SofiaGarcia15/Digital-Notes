@@ -5,21 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Digital Notes + Firebase</title>
   <style>
+    :root {
+      color-scheme: light;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial, sans-serif;
       margin: 0;
+      font-family: Arial, sans-serif;
       background: #f5f6fb;
       color: #1f2937;
     }
 
     .container {
-      max-width: 860px;
+      max-width: 900px;
       margin: 2rem auto;
       padding: 1rem;
     }
 
     .card {
-      background: #fff;
+      background: #ffffff;
       border-radius: 12px;
       box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
       padding: 1rem;
@@ -30,12 +38,21 @@
       margin-top: 0;
     }
 
-    form {
+    .grid {
       display: grid;
       gap: 0.75rem;
     }
 
-    input, textarea, button {
+    .grid-two {
+      display: grid;
+      gap: 0.75rem;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    input,
+    textarea,
+    button {
+      width: 100%;
       font: inherit;
       padding: 0.65rem;
       border-radius: 8px;
@@ -48,8 +65,8 @@
     }
 
     button {
-      cursor: pointer;
       border: none;
+      cursor: pointer;
       background: #2563eb;
       color: #fff;
       font-weight: 600;
@@ -59,29 +76,21 @@
       background: #6b7280;
     }
 
+    .actions {
+      display: grid;
+      gap: 0.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    }
+
     .hidden {
       display: none;
-    }
-
-    #notesList {
-      display: grid;
-      gap: 0.75rem;
-      padding-left: 0;
-      list-style: none;
-    }
-
-    #notesList li {
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      padding: 0.8rem;
-      background: #fafafa;
     }
 
     .note-header {
       display: flex;
       justify-content: space-between;
-      gap: 0.6rem;
       align-items: center;
+      gap: 0.75rem;
       margin-bottom: 0.5rem;
     }
 
@@ -99,6 +108,31 @@
       color: #065f46;
       font-weight: 600;
     }
+
+    #notesList {
+      list-style: none;
+      margin: 1rem 0 0;
+      padding: 0;
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    #notesList li {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 0.8rem;
+      background: #fafafa;
+    }
+
+    .note-title {
+      margin: 0;
+      font-size: 1.05rem;
+    }
+
+    .note-content {
+      margin: 0.3rem 0;
+      white-space: pre-wrap;
+    }
   </style>
 </head>
 <body>
@@ -107,26 +141,46 @@
 
     <section id="authCard" class="card">
       <h2>Registro / Login</h2>
-      <form id="authForm">
-        <input id="email" type="email" placeholder="Email" required />
-        <input id="password" type="password" placeholder="Contraseña (mín. 6)" minlength="6" required />
-        <div style="display:flex; gap:0.5rem; flex-wrap: wrap;">
-          <button type="button" id="registerBtn">Registrarme</button>
-          <button type="button" id="loginBtn" class="secondary">Entrar</button>
+
+      <!-- Formulario de registro (incluye nombre, edad, email y contraseña) -->
+      <form id="registerForm" class="grid">
+        <div class="grid-two">
+          <input id="name" type="text" placeholder="Nombre completo" required />
+          <input id="age" type="number" min="1" max="120" placeholder="Edad" required />
         </div>
+        <div class="grid-two">
+          <input id="email" type="email" placeholder="Email" required />
+          <input id="password" type="password" minlength="6" placeholder="Contraseña (mín. 6)" required />
+        </div>
+        <button type="submit">Registrarme</button>
       </form>
+
+      <hr style="margin: 1rem 0; border: 0; border-top: 1px solid #e5e7eb;" />
+
+      <!-- Formulario de login con email y contraseña -->
+      <form id="loginForm" class="grid">
+        <div class="grid-two">
+          <input id="loginEmail" type="email" placeholder="Email" required />
+          <input id="loginPassword" type="password" minlength="6" placeholder="Contraseña" required />
+        </div>
+        <button type="submit" class="secondary">Iniciar sesión</button>
+      </form>
+
       <p id="authMessage" class="muted"></p>
     </section>
 
     <section id="notesCard" class="card hidden">
       <div class="note-header">
         <h2 style="margin:0;">Mis notas</h2>
+        <!-- Botón para cerrar sesión -->
         <button id="logoutBtn" class="secondary" style="width:auto;">Cerrar sesión</button>
       </div>
-      <p class="muted" id="currentUser"></p>
 
-      <form id="noteForm">
-        <input id="noteTitle" type="text" placeholder="Título" required />
+      <p id="currentUser" class="muted"></p>
+
+      <!-- Formulario para crear una nueva nota -->
+      <form id="noteForm" class="grid">
+        <input id="noteTitle" type="text" placeholder="Título de la nota" required />
         <textarea id="noteContent" placeholder="Escribe tu nota..." required></textarea>
         <button type="submit">Guardar nota</button>
       </form>
@@ -135,6 +189,230 @@
     </section>
   </main>
 
-  <script type="module" src="firebase-notes.js"></script>
+  <script type="module">
+    // Importamos Firebase v10 usando módulos CDN (gstatic), sin npm ni bundlers.
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      setDoc,
+      query,
+      where,
+      onSnapshot,
+      serverTimestamp,
+      doc,
+      orderBy
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    // Configuración Firebase solicitada.
+    const firebaseConfig = {
+      apiKey: "AIzaSyDASFQhPhBse69zrMy5iy028KqFVGxTALg",
+      authDomain: "digital-notes-7cfc0.firebaseapp.com",
+      projectId: "digital-notes-7cfc0",
+      storageBucket: "digital-notes-7cfc0.firebasestorage.app",
+      messagingSenderId: "206304200598",
+      appId: "1:206304200598:web:61586d1fa6e33a5655bfb7"
+    };
+
+    // Inicializamos servicios principales.
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Referencias a elementos del DOM.
+    const authCard = document.getElementById("authCard");
+    const notesCard = document.getElementById("notesCard");
+    const authMessage = document.getElementById("authMessage");
+    const currentUser = document.getElementById("currentUser");
+
+    const registerForm = document.getElementById("registerForm");
+    const loginForm = document.getElementById("loginForm");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    const nameInput = document.getElementById("name");
+    const ageInput = document.getElementById("age");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+
+    const loginEmailInput = document.getElementById("loginEmail");
+    const loginPasswordInput = document.getElementById("loginPassword");
+
+    const noteForm = document.getElementById("noteForm");
+    const noteTitle = document.getElementById("noteTitle");
+    const noteContent = document.getElementById("noteContent");
+    const notesList = document.getElementById("notesList");
+
+    // Guardamos aquí la suscripción activa de notas para poder limpiarla al cambiar de sesión.
+    let unsubscribeNotes = null;
+
+    function showMessage(message, type = "muted") {
+      authMessage.textContent = message;
+      authMessage.className = type;
+    }
+
+    function renderNotes(documents) {
+      notesList.innerHTML = "";
+
+      if (documents.length === 0) {
+        notesList.innerHTML = "<li class='muted'>Todavía no tienes notas.</li>";
+        return;
+      }
+
+      for (const noteDoc of documents) {
+        const note = noteDoc.data();
+        const li = document.createElement("li");
+
+        const createdAt = note.createdAt?.toDate?.();
+        const createdLabel = createdAt
+          ? createdAt.toLocaleString("es-ES")
+          : "Guardando fecha...";
+
+        li.innerHTML = `
+          <h3 class="note-title">${note.title}</h3>
+          <p class="note-content">${note.content}</p>
+          <p class="muted">Creada: ${createdLabel}</p>
+        `;
+
+        notesList.appendChild(li);
+      }
+    }
+
+    // 1 + 3) Registro: crea cuenta en Auth y guarda datos adicionales en Firestore (colección "usuarios").
+    registerForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const nombre = nameInput.value.trim();
+      const edad = Number(ageInput.value);
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!nombre) {
+        showMessage("El nombre es obligatorio.", "error");
+        return;
+      }
+
+      if (!Number.isInteger(edad) || edad < 1) {
+        showMessage("La edad debe ser un número válido.", "error");
+        return;
+      }
+
+      try {
+        const credential = await createUserWithEmailAndPassword(auth, email, password);
+        const uid = credential.user.uid;
+
+        // Guardamos perfil adicional en Firestore, usando el UID como id del documento.
+        await setDoc(doc(db, "usuarios", uid), {
+          uid,
+          nombre,
+          edad,
+          email,
+          creadoEn: serverTimestamp()
+        });
+
+        showMessage("Registro correcto. Usuario creado y perfil guardado.", "success");
+        registerForm.reset();
+      } catch (error) {
+        showMessage(`Error al registrarte: ${error.message}`, "error");
+      }
+    });
+
+    // 2) Login con email y contraseña.
+    loginForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const email = loginEmailInput.value.trim();
+      const password = loginPasswordInput.value;
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        showMessage("Inicio de sesión correcto.", "success");
+        loginForm.reset();
+      } catch (error) {
+        showMessage(`Error al iniciar sesión: ${error.message}`, "error");
+      }
+    });
+
+    // 6) Cerrar sesión.
+    logoutBtn.addEventListener("click", async () => {
+      await signOut(auth);
+      showMessage("Sesión cerrada.", "muted");
+    });
+
+    // 4) Crear nota y guardarla en colección "notas" con campo uid del usuario actual.
+    noteForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const user = auth.currentUser;
+      if (!user) {
+        showMessage("Debes iniciar sesión para guardar notas.", "error");
+        return;
+      }
+
+      const title = noteTitle.value.trim();
+      const content = noteContent.value.trim();
+
+      if (!title || !content) {
+        showMessage("Completa título y contenido.", "error");
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "notas"), {
+          uid: user.uid,
+          title,
+          content,
+          createdAt: serverTimestamp()
+        });
+
+        noteForm.reset();
+        showMessage("Nota guardada correctamente.", "success");
+      } catch (error) {
+        showMessage(`Error al guardar la nota: ${error.message}`, "error");
+      }
+    });
+
+    // 5) Detectar sesión activa y mostrar/ocultar paneles.
+    onAuthStateChanged(auth, (user) => {
+      // Si existía una escucha previa de notas, la detenemos antes de crear otra.
+      if (unsubscribeNotes) {
+        unsubscribeNotes();
+        unsubscribeNotes = null;
+      }
+
+      if (user) {
+        authCard.classList.add("hidden");
+        notesCard.classList.remove("hidden");
+        currentUser.textContent = `Conectado como: ${user.email}`;
+
+        // 4) Mostrar solo notas del usuario logueado (filtradas por uid).
+        const notesQuery = query(
+          collection(db, "notas"),
+          where("uid", "==", user.uid),
+          orderBy("createdAt", "desc")
+        );
+
+        unsubscribeNotes = onSnapshot(notesQuery, (snapshot) => {
+          renderNotes(snapshot.docs);
+        }, (error) => {
+          showMessage(`Error al cargar notas: ${error.message}`, "error");
+        });
+
+        return;
+      }
+
+      authCard.classList.remove("hidden");
+      notesCard.classList.add("hidden");
+      currentUser.textContent = "";
+      notesList.innerHTML = "";
+    });
+  </script>
 </body>
 </html>
