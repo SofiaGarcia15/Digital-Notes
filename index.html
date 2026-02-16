@@ -511,6 +511,22 @@
       outline-offset:2px;
     }
 
+    .note-asset-block{
+      margin:12px 0;
+      padding:10px;
+      border:1px dashed var(--border);
+      border-radius:12px;
+      background:rgba(255,255,255,0.55);
+    }
+
+    .note-asset-block figcaption{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:8px;
+      font-weight:700;
+      letter-spacing:.2px;
+    }
+
     .drawing-board{
       display:none;
       margin-bottom:12px;
@@ -550,6 +566,7 @@
     }
 
     .template-gallery{
+      display:none;
       margin-top:18px;
       padding:16px;
       border-radius:14px;
@@ -1576,6 +1593,7 @@
           </label>
           <button id="templateEraserBtn">Borrador</button>
           <button id="templateClearBtn">Limpiar</button>
+          <button id="templateSaveBtn" class="btn">Guardar en nota</button>
           <button id="templateCloseBtn" class="btn" style="background:#ddd">Cerrar</button>
         </div>
       </div>
@@ -2299,16 +2317,36 @@
 
     const drawingBoard = qs('#drawingBoard');
     const templatePanel = qs('#templatePanel');
+    const templateGalleryEditor = qs('#templateGalleryEditor');
+    function setTemplateSession(isOpen){
+      templatePanel.style.display = isOpen ? 'block' : 'none';
+      templateGalleryEditor.style.display = isOpen ? 'block' : 'none';
+      qs('#insertTemplateBtn').setAttribute('aria-pressed', String(isOpen));
+    }
     qs('#insertTemplateBtn').addEventListener('click', ()=>{
-      templatePanel.style.display = templatePanel.style.display === 'block' ? 'none' : 'block';
+      const open = templatePanel.style.display !== 'block';
+      setTemplateSession(open);
       drawingBoard.style.display = 'none';
     });
+
+    function insertAssetBlock({src, label, width='95%'}){
+      qs('#editor').focus();
+      const safeLabel = label || 'Elemento';
+      insertHtmlAtCursor(`
+        <figure class="note-asset-block">
+          <figcaption>${safeLabel}</figcaption>
+          <img src="${src}" class="note-img" style="width:${width};display:block;margin:0 auto;position:relative;left:0;top:0;" alt="${safeLabel}" />
+        </figure>
+        <p><br></p>
+      `);
+    }
 
     qsa('.template-btn').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         const src = btn.dataset.template;
-        insertHtmlAtCursor(`<img src="${src}" class="note-img" style="width:96%;display:block;margin:8px auto;position:relative;left:0px;top:0px;" />`);
+        insertAssetBlock({ src, label:'Plantilla en la nota', width:'96%' });
         saveCurrentNote({shouldClose:false});
+        setTemplateSession(false);
       });
     });
 
@@ -2363,7 +2401,7 @@
     });
     qs('#saveDrawingBtn').addEventListener('click', ()=>{
       const dataUrl = drawCanvas.toDataURL('image/png');
-      insertHtmlAtCursor(`<img src="${dataUrl}" class="note-img" style="width:90%;display:block;margin:10px auto;position:relative;left:0px;top:0px;" />`);
+      insertAssetBlock({ src:dataUrl, label:'Dibujo en la nota', width:'90%' });
       saveCurrentNote({shouldClose:false});
     });
 
@@ -2447,7 +2485,7 @@
     });
     qs('#drawFsSave').addEventListener('click', ()=>{
       const dataUrl = drawFsCanvas.toDataURL('image/png');
-      insertHtmlAtCursor(`<img src="${dataUrl}" class="note-img" style="width:95%;display:block;margin:10px auto;position:relative;left:0px;top:0px;" />`);
+      insertAssetBlock({ src:dataUrl, label:'Dibujo en pantalla completa', width:'95%' });
       saveCurrentNote({shouldClose:false});
       closeFullscreenDraw();
     });
@@ -2517,6 +2555,25 @@
       fitTemplateCanvas();
       ensureTemplatePad().clear();
     }
+
+    qs('#templateSaveBtn').addEventListener('click', ()=>{
+      const selectedTemplate = templateBgImage.getAttribute('src');
+      if(!selectedTemplate) return;
+      const composedCanvas = document.createElement('canvas');
+      composedCanvas.width = templateCanvas.width;
+      composedCanvas.height = templateCanvas.height;
+      const composedCtx = composedCanvas.getContext('2d');
+      const baseImage = new Image();
+      baseImage.onload = ()=>{
+        composedCtx.drawImage(baseImage, 0, 0, composedCanvas.width, composedCanvas.height);
+        composedCtx.drawImage(templateCanvas, 0, 0, composedCanvas.width, composedCanvas.height);
+        const dataUrl = composedCanvas.toDataURL('image/png');
+        insertAssetBlock({ src:dataUrl, label:'Plantilla en la nota', width:'96%' });
+        saveCurrentNote({shouldClose:false});
+        overlayTemplateEditor.style.display = 'none';
+      };
+      baseImage.src = selectedTemplate;
+    });
 
     qs('#templateCloseBtn').addEventListener('click', ()=>overlayTemplateEditor.style.display='none');
     window.addEventListener('resize', ()=>{
