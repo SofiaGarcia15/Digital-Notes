@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digital Notes + Firebase</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f5f6fb;
+      color: #1f2937;
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    h1, h2 {
+      margin-top: 0;
+    }
+
+    form {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    input, textarea, button {
+      font: inherit;
+      padding: 0.65rem;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      background: #2563eb;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    button.secondary {
+      background: #6b7280;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #notesList {
+      display: grid;
+      gap: 0.75rem;
+      padding-left: 0;
+      list-style: none;
+    }
+
+    #notesList li {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 0.8rem;
+      background: #fafafa;
+    }
+
+    .note-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.6rem;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .muted {
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+
+    .error {
+      color: #b91c1c;
+      font-weight: 600;
+    }
+
+    .success {
+      color: #065f46;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <h1>Digital Notes + Firebase</h1>
+
+    <section id="authCard" class="card">
+      <h2>Registro / Login</h2>
+      <form id="authForm">
+        <input id="email" type="email" placeholder="Email" required />
+        <input id="password" type="password" placeholder="Contraseña (mín. 6)" minlength="6" required />
+        <div style="display:flex; gap:0.5rem; flex-wrap: wrap;">
+          <button type="button" id="registerBtn">Registrarme</button>
+          <button type="button" id="loginBtn" class="secondary">Entrar</button>
+        </div>
+      </form>
+      <p id="authMessage" class="muted"></p>
+    </section>
+
+    <section id="notesCard" class="card hidden">
+      <div class="note-header">
+        <h2 style="margin:0;">Mis notas</h2>
+        <button id="logoutBtn" class="secondary" style="width:auto;">Cerrar sesión</button>
+      </div>
+      <p class="muted" id="currentUser"></p>
+
+      <form id="noteForm">
+        <input id="noteTitle" type="text" placeholder="Título" required />
+        <textarea id="noteContent" placeholder="Escribe tu nota..." required></textarea>
+        <button type="submit">Guardar nota</button>
+      </form>
+
+      <ul id="notesList"></ul>
+    </section>
+  </main>
+
+  <script type="module" src="firebase-notes.js"></script>
+</body>
+</html>
