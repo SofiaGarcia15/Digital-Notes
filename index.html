@@ -1264,11 +1264,6 @@
         </label>
       </div>
       <div class="notes-grid" id="notesGrid"></div>
-      <div class="template-gallery" id="templateGallery">
-        <h3>Galería de plantillas</h3>
-        <p style="margin:0 0 12px;color:var(--muted)">Selecciona una plantilla para escribir o dibujar encima en pantalla completa (iPad, dedo y Apple Pencil).</p>
-        <div class="template-grid" id="templateGrid"></div>
-      </div>
     </section>
 
     <section id="view-cuadernos" class="notebook-shell" style="display:none">
@@ -1436,6 +1431,12 @@
           <button class="template-btn" data-template="plantilla4.png">Plantilla 4</button>
           <button class="template-btn" data-template="plantilla5.png">Plantilla 5</button>
         </div>
+      </div>
+
+      <div class="template-gallery" id="templateGalleryEditor">
+        <h3>Galería de plantillas</h3>
+        <p style="margin:0 0 12px;color:var(--muted)">Esta sesión es para agregar notas con plantilla. Elige una para escribir o dibujar en pantalla completa.</p>
+        <div class="template-grid" id="templateGridEditor"></div>
       </div>
 
       <div class="image-controls" id="imageControls">
@@ -1608,6 +1609,7 @@
        --------------------------- */
     const STORAGE_KEY = 'digitalNotesData_v7';
     const ONBOARDING_KEY = 'digitalNotesOnboarding_v1';
+    const CALENDAR_STABLE_KEY = 'digitalNotesCalendarStable_v1';
     let state = { notebooks: [], notes: [], darkMode: false };
     const uid = ()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
     const qs = s => document.querySelector(s);
@@ -1732,7 +1734,7 @@
     }
 
     function renderTemplateGallery(){
-      const grid = qs('#templateGrid');
+      const grid = qs('#templateGridEditor');
       if(!grid) return;
       grid.innerHTML = '';
       TEMPLATE_ITEMS.forEach(template=>{
@@ -1971,9 +1973,45 @@
     let calendarDate = new Date();
     let selectedCalendarDay = null;
 
+    function startOfDay(date){
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    }
+
+    function getStableCalendarDate(){
+      const fallback = startOfDay(new Date());
+      const raw = localStorage.getItem(CALENDAR_STABLE_KEY);
+      if(!raw){
+        localStorage.setItem(CALENDAR_STABLE_KEY, JSON.stringify({
+          anchorDate: fallback.getTime(),
+          anchorSavedAt: Date.now()
+        }));
+        return fallback;
+      }
+      try{
+        const data = JSON.parse(raw);
+        if(!data?.anchorDate || !data?.anchorSavedAt) return fallback;
+        const elapsedMs = Math.max(0, Date.now() - Number(data.anchorSavedAt));
+        const elapsedDays = Math.floor(elapsedMs / 86400000);
+        const base = startOfDay(new Date(Number(data.anchorDate)));
+        base.setDate(base.getDate() + elapsedDays);
+        return base;
+      }catch(_e){
+        return fallback;
+      }
+    }
+
+    function saveStableCalendarDate(date){
+      const stable = startOfDay(date);
+      localStorage.setItem(CALENDAR_STABLE_KEY, JSON.stringify({
+        anchorDate: stable.getTime(),
+        anchorSavedAt: Date.now()
+      }));
+    }
+
     function openCalendarModal(){
-      calendarDate = new Date();
-      selectedCalendarDay = null;
+      const stableDate = getStableCalendarDate();
+      calendarDate = new Date(stableDate);
+      selectedCalendarDay = new Date(stableDate);
       renderCalendar();
       qs('#overlayCalendar').style.display = 'flex';
     }
@@ -2008,8 +2046,17 @@
         btn.type = 'button';
         btn.className = 'calendar-day';
         btn.textContent = day;
+        if(
+          selectedCalendarDay &&
+          selectedCalendarDay.getFullYear() === year &&
+          selectedCalendarDay.getMonth() === month &&
+          selectedCalendarDay.getDate() === day
+        ){
+          btn.classList.add('active');
+        }
         btn.addEventListener('click', ()=>{
           selectedCalendarDay = new Date(year, month, day);
+          saveStableCalendarDate(selectedCalendarDay);
           qsa('.calendar-day').forEach(d=>d.classList.remove('active'));
           btn.classList.add('active');
         });
