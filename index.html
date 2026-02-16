@@ -49,7 +49,7 @@
       <p id="authMessage" class="message"></p>
     </section>
 
-    <section class="card notes-card hidden" id="notesSection">
+    <section class="card hidden" id="notesSection">
       <div class="notes-header">
         <div>
           <h2>Mis notas</h2>
@@ -58,55 +58,16 @@
         <button id="logoutBtn" type="button" class="pink-btn">Cerrar sesión</button>
       </div>
 
-      <div class="stats-grid">
-        <article class="stat-item">
-          <span>Total</span>
-          <strong id="totalNotes">0</strong>
-        </article>
-        <article class="stat-item">
-          <span>Destacadas</span>
-          <strong id="pinnedNotes">0</strong>
-        </article>
-        <article class="stat-item">
-          <span>Categorías</span>
-          <strong id="categoryCount">0</strong>
-        </article>
-      </div>
-
-      <div class="tools-grid">
-        <div>
-          <label for="searchInput">Buscar nota</label>
-          <input id="searchInput" type="search" placeholder="Busca por título o contenido" />
-        </div>
-        <div>
-          <label for="sortSelect">Ordenar</label>
-          <select id="sortSelect">
-            <option value="newest">Más recientes</option>
-            <option value="oldest">Más antiguas</option>
-            <option value="pinned">Destacadas primero</option>
-          </select>
-        </div>
-      </div>
-
       <form id="noteForm" class="form active">
         <label for="noteTitle">Título</label>
         <input id="noteTitle" type="text" placeholder="Título de la nota" required />
 
-        <label for="noteCategory">Categoría</label>
-        <input id="noteCategory" type="text" placeholder="Ej: estudio, trabajo, personal" />
-
         <label for="noteContent">Contenido</label>
         <textarea id="noteContent" placeholder="Escribe tu nota aquí..." required></textarea>
-
-        <label class="checkbox-label" for="notePinned">
-          <input id="notePinned" type="checkbox" />
-          Marcar como destacada
-        </label>
 
         <button type="submit" class="pink-btn">Guardar nota</button>
       </form>
 
-      <p id="notesMessage" class="message"></p>
       <ul id="notesList" class="notes-list"></ul>
     </section>
   </main>
