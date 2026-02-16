@@ -36,6 +36,10 @@ body {
   box-shadow: var(--shadow);
 }
 
+.notes-card {
+  width: min(100%, 760px);
+}
+
 h1,
 h2 {
   margin: 0;
@@ -85,7 +89,8 @@ label {
 }
 
 input,
-textarea {
+textarea,
+select {
   width: 100%;
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -96,7 +101,8 @@ textarea {
 }
 
 input:focus,
-textarea:focus {
+textarea:focus,
+select:focus {
   border-color: var(--pink-strong);
   outline: 2px solid rgba(245, 74, 147, 0.15);
 }
@@ -104,6 +110,18 @@ textarea:focus {
 textarea {
   min-height: 120px;
   resize: vertical;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.2rem;
+}
+
+.checkbox-label input {
+  width: auto;
+  margin: 0;
 }
 
 .pink-btn {
@@ -121,6 +139,17 @@ textarea {
 .pink-btn:hover {
   background: var(--pink-strong-hover);
   transform: translateY(-1px);
+}
+
+.ghost-btn {
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--pink-strong);
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .message {
@@ -146,6 +175,37 @@ textarea {
   margin-bottom: 1rem;
 }
 
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.stat-item {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fff9fc;
+  padding: 0.65rem;
+}
+
+.stat-item span {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.stat-item strong {
+  font-size: 1.2rem;
+}
+
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
 .notes-list {
   list-style: none;
   margin: 1rem 0 0;
@@ -161,6 +221,13 @@ textarea {
   background: #fff9fc;
 }
 
+.note-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 0.8rem;
+}
+
 .note-item h3 {
   margin: 0;
   font-size: 1rem;
@@ -171,6 +238,29 @@ textarea {
   white-space: pre-wrap;
 }
 
+.note-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.note-tag {
+  border: 1px solid var(--border);
+  background: #ffeef5;
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+}
+
+.note-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.45rem;
+  margin-top: 0.45rem;
+}
+
 .note-date {
   color: var(--muted);
   font-size: 0.82rem;
@@ -178,6 +268,13 @@ textarea {
 
 .hidden {
   display: none;
+}
+
+@media (max-width: 700px) {
+  .tools-grid,
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 520px) {
