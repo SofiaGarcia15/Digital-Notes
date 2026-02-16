@@ -1555,6 +1555,7 @@
           </label>
           <button id="templateEraserBtn">Borrador</button>
           <button id="templateClearBtn">Limpiar</button>
+          <button id="templateSaveBtn" class="btn">Guardar en nota</button>
           <button id="templateCloseBtn" class="btn" style="background:#ddd">Cerrar</button>
         </div>
       </div>
@@ -2445,6 +2446,45 @@
       ensureTemplatePad().clear();
     }
 
+    async function buildTemplateCompositeImage(){
+      const out = document.createElement('canvas');
+      out.width = templateCanvas.width;
+      out.height = templateCanvas.height;
+      const outCtx = out.getContext('2d');
+      await new Promise(resolve=>{
+        if(templateBgImage.complete && templateBgImage.naturalWidth){
+          resolve();
+          return;
+        }
+        templateBgImage.onload = ()=>resolve();
+      });
+      const imgRatio = templateBgImage.naturalWidth / templateBgImage.naturalHeight;
+      const canvasRatio = out.width / out.height;
+      let drawW = out.width;
+      let drawH = out.height;
+      let offsetX = 0;
+      let offsetY = 0;
+      if(imgRatio > canvasRatio){
+        drawH = out.width / imgRatio;
+        offsetY = (out.height - drawH) / 2;
+      } else {
+        drawW = out.height * imgRatio;
+        offsetX = (out.width - drawW) / 2;
+      }
+      outCtx.fillStyle = '#ffffff';
+      outCtx.fillRect(0,0,out.width,out.height);
+      outCtx.drawImage(templateBgImage, offsetX, offsetY, drawW, drawH);
+      outCtx.drawImage(templateCanvas, 0, 0, out.width, out.height);
+      return out.toDataURL('image/png');
+    }
+
+    qs('#templateSaveBtn').addEventListener('click', async ()=>{
+      const dataUrl = await buildTemplateCompositeImage();
+      insertHtmlAtCursor(`<img src="${dataUrl}" class="note-img" style="width:96%;display:block;margin:8px auto;position:relative;left:0px;top:0px;" />`);
+      saveCurrentNote({shouldClose:false});
+      overlayTemplateEditor.style.display='none';
+    });
+
     qs('#templateCloseBtn').addEventListener('click', ()=>overlayTemplateEditor.style.display='none');
     window.addEventListener('resize', ()=>{
       if(drawFullscreenOverlay.style.display === 'flex') resizeFsCanvas();
@@ -2627,7 +2667,9 @@
     // --- Utility: close overlays when clicking outside modal content ---
     document.querySelectorAll('.overlay').forEach(ov=>{
       ov.addEventListener('click', e=>{
-        if(e.target === ov){ ov.style.display='none'; editingNote=null; }
+        if(e.target !== ov) return;
+        ov.style.display='none';
+        if(ov.id === 'overlayEditor') editingNote = null;
       });
     });
 
